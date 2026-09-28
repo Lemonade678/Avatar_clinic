@@ -92,7 +92,7 @@ shelves:
 `import_csv.py` ปฏิเสธถ้า SKU ใน config ไม่มีใน CSV หรือ SKU ซ้ำหลายชั้น
 
 ## การใช้งานในแชท
-1. **สแกน QR** → QR เป็นลิงก์ `https://line.me/R/oaMessage/<basic_id>/?ชั้น%20A2` → LINE ส่งข้อความ `ชั้น A2` ให้ bot เอง
+1. **สแกน QR** → QR เป็นลิงก์ `https://line.me/R/oaMessage/<basic_id>/?ชั้น%20A2` → LINE เปิดแชทกับ bot พร้อมข้อความ `ชั้น A2` ในช่องพิมพ์ → พนักงานกดส่ง 1 ครั้ง
 2. bot ตอบ:
    ```
    ชั้น A2 (ชั้นเหล็กซ้าย แถว 2) — 27/9
