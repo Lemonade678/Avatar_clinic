@@ -70,6 +70,7 @@ stock-count/
 | `stock_snapshots` | `sku`, `back_qty`, `as_of` | ยอดในระบบ · POC มีชุดเดียว (27/9/2026) |
 | `count_sessions` | `id`, `count_date` unique, `opened_at`, `closed_at` | รอบละวัน |
 | `counts` | `session_id`, `shelf_code`, `sku`, `expected_qty`, `counted_qty`, `line_user_id`, `updated_at` | unique (session, sku) · นับซ้ำ = ทับค่าเดิม |
+| `user_state` | `line_user_id` PK, `shelf_code`, `opened_at` | ชั้นที่ผู้ใช้เปิดอยู่ · หมดอายุ 10 นาที |
 | `shelf_photos` | `session_id`, `shelf_code`, `storage_path`, `line_user_id` | ไฟล์อยู่ใน bucket `shelf-photos` |
 
 - `expected_qty` คัดลอกจาก snapshot ตอนนับ → รายงานย้อนหลังไม่เพี้ยนแม้ snapshot เปลี่ยน
@@ -104,7 +105,7 @@ shelves:
 4. ส่งรูป → ผูกกับชั้นล่าสุดที่ผู้ใช้คนนั้นเปิด (ภายใน 10 นาที)
 5. พิมพ์ `สรุป` → bot ตอบชั้นที่นับแล้ว/ยังไม่นับ + รายการไม่ตรงทั้งหมด · พิมพ์ `ปิดรอบ` → ปิดรอบวันนี้
 
-**สถานะต่อผู้ใช้** (ชั้นที่เปิดอยู่): เก็บในตาราง/หน่วยความจำ — POC เก็บใน Supabase ตาราง `user_state (line_user_id, shelf_code, opened_at)` เพื่อให้รอดการ restart เซิร์ฟเวอร์
+**สถานะต่อผู้ใช้** (ชั้นที่เปิดอยู่) เก็บในตาราง `user_state` ของ Supabase ไม่เก็บในหน่วยความจำ เพื่อให้รอดการ restart เซิร์ฟเวอร์
 
 ## Error handling
 | เหตุการณ์ | bot ตอบ |
