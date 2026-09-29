@@ -7,7 +7,7 @@ created: 2026-09-28
 ---
 # Stock Count Phase 1 Implementation Plan
 
-← [[Project - Stock Count]] · [[2026-09-28-stock-count-design]]
+← [[Project - Stock Count]] · [[2026-09-28-stock-count-design]] · 🇹🇭 ฉบับไทย: [[2026-09-28-stock-count-phase1-th]]
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

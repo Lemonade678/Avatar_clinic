@@ -7,7 +7,7 @@ created: 2026-09-28
 ---
 # 📦 Spec — ระบบนับสต็อกหลังร้านผ่าน LINE (POC)
 
-← [[Project - Stock Count]] · [[Code Hub - Avatar]]
+← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇬🇧 English: [[2026-09-28-stock-count-design-en]]
 
 ## TL;DR
 พนักงานสาขาลาดพร้าวสแกน QR ที่ชั้นหลังร้าน → แชท LINE bot ส่งรายการสินค้าชั้นนั้น → พิมพ์ยอด (+แนบรูปได้) → เก็บลง Supabase รายวัน → ปิดรอบแล้ว bot สรุปรายการที่ **ไม่ตรงกับยอดในระบบ**
@@ -45,13 +45,13 @@ created: 2026-09-28
 stock-count/
 ├── config.yaml              # สาขา, allowlist, ผังชั้น → SKU
 ├── .env.example             # LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_KEY
-├── data/stock_2026-09-27.csv   # ถอดจากใบนับ (sku, name, category, back_qty, front_qty)
+├── data/stock_2026-09-27.csv   # ถอดจากใบนับ (sku, name, category, back_qty, front_qty, system_qty, code_hint, needs_review)
 ├── supabase/migrations/*.sql   # schema — source of truth อยู่ใน git
 ├── src/stockcount/
 │   ├── config.py     # โหลด + validate config.yaml
 │   ├── parser.py     # แปลงข้อความแชท → คำสั่ง (ไม่ยุ่ง I/O)
 │   ├── service.py    # กติกา: เปิดรอบ, บันทึกยอด, สรุป
-│   ├── repo.py       # คุย Supabase (มี FakeRepo สำหรับเทสต์)
+│   ├── repo.py       # คุย Supabase (มี InMemoryRepo สำหรับเทสต์)
 │   ├── messages.py   # สร้างข้อความตอบกลับภาษาไทย
 │   └── app.py        # FastAPI webhook + ตรวจลายเซ็น LINE
 ├── scripts/
@@ -80,6 +80,7 @@ stock-count/
 ## config.yaml (ตัวอย่าง)
 ```yaml
 branch: ladprao
+line_basic_id: "@CHANGE-ME"   # Basic ID ของ LINE OA ใช้สร้างลิงก์ใน QR
 allowed_line_user_ids: []   # ว่าง = ใครก็ได้ (ช่วงทดลอง); ใส่ ID = จำกัดเฉพาะคนในลิสต์
 shelves:
   A1:
@@ -121,7 +122,7 @@ shelves:
 | Supabase ล้ม | `บันทึกไม่สำเร็จ ลองอีกครั้ง` + log error · ไม่มีการบันทึกครึ่ง ๆ (ทั้งชั้นหรือไม่เลย) |
 
 ## การทดสอบ
-- **unit (pytest):** `parser` (ทุกรูปแบบข้อความ), `service` กับ `FakeRepo` (เปิดรอบ, บันทึก, นับซ้ำทับ, สรุป, ปิดรอบ, หมดเวลา 10 นาที), `config` validation, `import_csv` กับ CSV ตัวอย่าง
+- **unit (pytest):** `parser` (ทุกรูปแบบข้อความ), `service` กับ `InMemoryRepo` (เปิดรอบ, บันทึก, นับซ้ำทับ, สรุป, ปิดรอบ, หมดเวลา 10 นาที), `config` validation, `import_csv` กับ CSV ตัวอย่าง
 - **webhook:** FastAPI `TestClient` + ลายเซ็นปลอมที่เซ็นด้วย secret ทดสอบ
 - **smoke จริง:** รันเครื่องตัวเอง + ngrok → สแกน QR 1 ชั้นจริงจากมือถือ
 
@@ -135,7 +136,7 @@ shelves:
 **เฟส 3 — เทรนตัวเอง:** รูปใหม่ที่พนักงานส่ง + ยอดที่พนักงานยืนยัน/แก้ = label ใหม่อัตโนมัติ → สะสมครบเกณฑ์ → เทรนโมเดลรอบใหม่ → ใช้ตัวใหม่เฉพาะเมื่อแม่นกว่าตัวเดิมบนชุดทดสอบ (ไม่ปล่อยโมเดลที่แย่ลงขึ้นใช้งาน) · spec เฟส 1 ต้องเก็บรูปกับยอดคู่กันให้ครบ เพื่อให้เฟส 3 เป็นไปได้
 
 ## ❓ คำถามค้าง
-- ❓ รหัสสินค้าหน้า 2–3 ของใบนับถูกตัดขอบซ้าย (เห็นแค่ `…013`, `…023`) → ✅ ตัดสินแล้ว: ใช้รหัสชั่วคราว `TEMP-<เลขท้ายที่เห็น>` (หรือ `TEMP-P<หน้า>-<ลำดับ>` ถ้าไม่เห็นเลขเลย) + คอลัมน์ `needs_review=true` ใน CSV · ณัฑฒ์แก้เป็นรหัสจริงทีหลัง
+- ❓ รหัสสินค้าหน้า 2–3 ของใบนับถูกตัดขอบซ้าย (เห็นแค่ `…013`, `…023`) → ✅ ตัดสินแล้ว: ใช้รหัสชั่วคราว `TEMP-P<หน้า>-<ลำดับ>` + เลขท้ายที่อ่านได้เก็บในคอลัมน์ `code_hint` + `needs_review=true` ใน CSV · FK ทุกตัวที่ชี้ `products.sku` ใช้ `on update cascade` เพื่อให้เปลี่ยนรหัสทีหลังได้ · ณัฑฒ์แก้เป็นรหัสจริงทีหลัง
 - ❓ สินค้าไหนอยู่ชั้นไหนหลังร้าน → ณัฑฒ์ต้องเดินจดผังชั้น (ใส่ใน `config.yaml`)
 - ❓ ต้องขออนุญาตหัวหน้าก่อนแปะ QR ที่ชั้นไหม
 - ❓ LINE OA ใช้บัญชีใหม่ของณัฑฒ์ หรือบัญชีบริษัท
