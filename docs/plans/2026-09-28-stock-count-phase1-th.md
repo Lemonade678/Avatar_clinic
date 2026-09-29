@@ -1,15 +1,15 @@
 ---
 tags: [plan, code, avatar-clinic, thai]
 aliases: [แผนนับสต็อกเฟส 1 (ไทย), Stock Count plan TH]
-status: draft
-status_note: "ฉบับภาษาไทยของแผน — โค้ดทั้งหมดอยู่ในฉบับอังกฤษ ถ้าสองฉบับไม่ตรงกัน ยึดฉบับอังกฤษ"
+status: done
+status_note: "ฉบับเก่า — ใช้ 2026-09-29-stock-count-phase1-th แทน"
 created: 2026-09-29
 ---
 # 🇹🇭 แผนลงมือเฟส 1 — ฉบับภาษาไทย
 
 > **สถานะ 2026-09-29:** งาน 1 ✅ · งาน 2 ✅ · schema + Action `db-migrate` + `scripts/import_csv.py` ✅ (ดึงมาทำก่อนจากงาน 7–8) · ต่อไป: งาน 3–6
 
-← [[Project - Stock Count]] · 🇬🇧 ฉบับเต็ม (มีโค้ด): [[2026-09-28-stock-count-phase1]] · spec: [[2026-09-28-stock-count-design]]
+← [[Project - Stock Count]] · 🇬🇧 ฉบับเต็ม (มีโค้ด): [[2026-09-28-stock-count-phase1]] · spec: [[2026-09-28-stock-count-design]] · 🆕 ฉบับล่าสุด: [[2026-09-29-stock-count-phase1-th]]
 
 > ฉบับนี้อธิบาย **ทำอะไร ทำไม และดูยังไงว่าเสร็จ** ของแต่ละงาน ส่วนโค้ดและคำสั่งเต็มอยู่ในฉบับอังกฤษ (ไม่ได้คัดโค้ดมาไว้สองที่ เพราะแก้ที่หนึ่งแล้วอีกที่จะเพี้ยน)
 

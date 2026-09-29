@@ -1,13 +1,13 @@
 ---
 tags: [spec, code, avatar-clinic, computer-vision, english]
 aliases: [Stock Count spec (EN), Stock Count design English]
-status: draft
-status_note: "English companion of the Thai spec — the Thai file is the source of truth if they ever differ"
+status: done
+status_note: "Old version — use 2026-09-29-stock-count-design-en instead"
 created: 2026-09-29
 ---
 # 📦 Spec — Back-store stock counting over LINE (POC)
 
-← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇹🇭 ภาษาไทย: [[2026-09-28-stock-count-design]]
+← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇹🇭 ภาษาไทย: [[2026-09-28-stock-count-design]] · 🆕 latest: [[2026-09-29-stock-count-design-en]]
 
 ## TL;DR
 Staff at the Ladprao branch scan a QR code on a back-store shelf → a LINE chat bot lists the products on that shelf → staff type the counts (and can attach a photo) → counts are stored in Supabase per day → when the day is closed, the bot summarises every item that **does not match the system stock**.

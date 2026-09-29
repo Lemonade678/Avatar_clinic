@@ -1,23 +1,23 @@
 ---
 tags: [plan, code, avatar-clinic]
 aliases: [Stock Count plan, แผนนับสต็อกเฟส 1]
-status: draft
-status_note: "รอณัฑฒ์รีวิวแผน + เลือกวิธีลงมือ"
+status: done
+status_note: "ฉบับเก่า — ใช้ 2026-09-29-stock-count-phase1 แทน"
 created: 2026-09-28
 ---
 # Stock Count Phase 1 Implementation Plan
 
-← [[Project - Stock Count]] · [[2026-09-28-stock-count-design]] · 🇹🇭 ฉบับไทย: [[2026-09-28-stock-count-phase1-th]]
+← [[Project - Stock Count]] · [[2026-09-28-stock-count-design]] · 🇹🇭 ฉบับไทย: [[2026-09-28-stock-count-phase1-th]] · 🆕 ฉบับล่าสุด: [[2026-09-29-stock-count-phase1]]
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Back-store staff scan a shelf QR type, counts into a LINE chat bot, and every count (plus an optional shelf photo) lands in Supabase per day, with a mismatch summary against the system stock.
+**Goal:** Back-store staff which is me scan a shelf QR type, counts into a LINE chat bot, and every count (plus an optional shelf photo that send to roboflow yolo model objection to tell how many it is so it just basic computer vision model {it also fact checking human error}) that lands in Supabase per day when shift done around , with a mismatch summary against the system stock. for mbk branch(pilot test) with time clock for checking session start. including digital minimap too like siam paragon minimap of shop aka sku directory. which susceptable for scaling in further
 
-Back-store staff scan a shelf QR type that POPOUT the sku type with number of stock in from stock system muc hlike  and 
+pilot duration 1 Month for phase 1
 
-**Architecture:** A FastAPI webhook receives LINE events, verifies the signature, and hands text/images to a pure `StockService` (rules) that talks to a `Repo` interface. `SupabaseRepo` is the real store; `InMemoryRepo` backs the tests. The command `parser`, the reply `messages`, the `config` loader, the CSV loader and QR builder are small, pure modules. The schema lives in `supabase/migrations/` and a GitHub Action pushes it (Supabase free plan).
+**Architecture:** A FastAPI webhook receives LINE events, verifies the signature, and hands text/images to a pure `StockService` (rules) that talks to a `Repo` interface. `SupabaseRepo` is the real store; `InMemoryRepo` backs the tests. The command `parser`, the reply `messages`, the `config` loader, the CSV loader and QR builder are small, pure modules. The schema lives in `supabase/migrations/` and a GitHub Action pushes it (Supabase free plan). 
 
-**Tech Stack:** Python 3.12 (min 3.11) · FastAPI + uvicorn · line-bot-sdk v3 · supabase-py v2 · PyYAML · qrcode + Pillow ≥10.1 · python-dotenv · tzdata · pytest + httpx · Supabase CLI via `npx` (Node 24 is installed) · ngrok for local HTTPS.
+**Tech Stack:** Python 3.12 (min 3.11) · FastAPI + uvicorn · line-bot-sdk v3 · supabase-py v2 · PyYAML · qrcode + Pillow ≥10.1 · python-dotenv · tzdata · pytest + httpx · Supabase CLI via `npx` (Node 24 is installed) · ngrok for local HTTPS. time for time counter and sustainable tech for minimap which like left and right side
 
 **Status 2026-09-29:** Task 1 ✅, Task 2 ✅, schema + `db-migrate` Action + `scripts/import_csv.py` ✅ (pulled forward from Tasks 7–8). Next: Tasks 3–6, then `qr.py`/`make_qr.py` (Task 7) and `SupabaseRepo`/smoke script (Task 8).
 
@@ -28,11 +28,11 @@ Back-store staff scan a shelf QR type that POPOUT the sku type with number of st
 - Repo root is `Avatar project/stock-count/` (already a git repo on branch `main`). All paths below are relative to it. Shell is Git Bash on Windows; the venv Python is `.venv/Scripts/python`.
 - Python `>=3.11`; package lives in `src/stockcount/` (src layout).
 - Human-edited config = `config.yaml`; secrets = `.env` (`LINE_CHANNEL_SECRET`, `LINE_CHANNEL_ACCESS_TOKEN`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`). `.env` is never committed.
-- Code, identifiers, comments in English. Every user-facing bot string is Thai and lives only in `src/stockcount/messages.py`.
+- Code, identifiers, comments in English. Every user-facing bot string is Thai and lives only in `src/stockcount/messages.py`. {comment please ensure it have utp-8}
 - Store only the LINE user ID of staff — no names, no phone numbers.
 - A count session is one per **Asia/Bangkok** calendar date.
 - An opened shelf stays active for **10 minutes** per user; saving counts restarts the window (so the photo prompt that follows has a full 10 minutes).
-- Staff **see** the system quantity while counting (no blind count — ณัฑฒ์'s decision).
+- Staff **see** the system quantity while counting (no blind count — ณัฑฒ์'s decision).{for transparency reason which align with ceo vision}
 - Expected quantity = `back_qty` from the latest `stock_snapshots` row for that SKU (POC counts the back store only).
 - Saving a shelf is all-or-nothing (one upsert statement); recounting a shelf overwrites the earlier numbers for that session.
 - Supabase is on the **free plan** → migrations are applied by a GitHub Action running `supabase db push` on pushes to `main`.
@@ -42,7 +42,7 @@ Back-store staff scan a shelf QR type that POPOUT the sku type with number of st
 
 ## Review Focus
 
-1. **Thai-keyboard digits** — a staff member types `๗ ๘` instead of `7 8`; it must be read as 7 and 8 (test in Task 3).
+1. **Thai-keyboard digits** — a staff member types `๗ ๘` instead of `7 8`; it must be read as 7 and 8 (test in Task 3). 
 2. **Counting after midnight** — the server clock is UTC; a count at 01:30 Bangkok on 29/09 must go into the 29/09 session, not 28/09 (test in Task 5).
 3. **CSV re-saved from Excel** — Excel adds a UTF-8 BOM; the loader must still find the `sku` column (test in Task 2).
 4. **LINE reply fails** (expired reply token, redelivered event) — the webhook must still answer 200 so LINE does not retry forever, and the count must already be saved (test in Task 6).
@@ -50,32 +50,32 @@ Back-store staff scan a shelf QR type that POPOUT the sku type with number of st
 
 ## File Map
 
-| File | Responsibility |
-|---|---|
-| `pyproject.toml` | package + dependencies + pytest config |
-| `config.yaml` | branch, LINE basic ID, allowlist, shelf → SKU layout |
-| `.env.example` | names of the secrets |
-| `data/stock_2026-09-28.csv` | stock sheet transcribed from the 3 photographed pages |
-| `src/stockcount/config.py` | load + validate `config.yaml` → `AppConfig` |
-| `src/stockcount/stock_csv.py` | read the CSV → `StockRow` list |
-| `src/stockcount/seed.py` | config + rows → rows to insert (pure) |
-| `src/stockcount/parser.py` | chat text → command object (pure) |
-| `src/stockcount/repo.py` | `Repo` protocol, data classes, `InMemoryRepo`, `SupabaseRepo` |
-| `src/stockcount/messages.py` | every Thai reply string |
-| `src/stockcount/service.py` | chat rules (`StockService`) |
-| `src/stockcount/app.py` | FastAPI webhook + production wiring |
-| `src/stockcount/qr.py` | LINE deep link + printable QR label |
-| `scripts/import_csv.py` | push CSV + layout into Supabase |
-| `scripts/make_qr.py` | write one PNG label per shelf |
-| `scripts/smoke_supabase.py` | exercise `SupabaseRepo` against the real project |
-| `supabase/migrations/20260928000000_init.sql` | schema + bucket |
-| `.github/workflows/tests.yml` | run pytest on push |
-| `.github/workflows/db-migrate.yml` | `supabase db push` on push to `main` |
+| File                                          | Responsibility                                                |
+| --------------------------------------------- | ------------------------------------------------------------- |
+| `pyproject.toml`                              | package + dependencies + pytest config                        |
+| `config.yaml`                                 | branch, LINE basic ID, allowlist, shelf → SKU layout          |
+| `.env.example`                                | names of the secrets                                          |
+| `data/stock_2026-09-28.csv`                   | stock sheet transcribed from the 3 photographed pages         |
+| `src/stockcount/config.py`                    | load + validate `config.yaml` → `AppConfig`                   |
+| `src/stockcount/stock_csv.py`                 | read the CSV → `StockRow` list                                |
+| `src/stockcount/seed.py`                      | config + rows → rows to insert (pure)                         |
+| `src/stockcount/parser.py`                    | chat text → command object (pure)                             |
+| `src/stockcount/repo.py`                      | `Repo` protocol, data classes, `InMemoryRepo`, `SupabaseRepo` |
+| `src/stockcount/messages.py`                  | every Thai reply string                                       |
+| `src/stockcount/service.py`                   | chat rules (`StockService`)                                   |
+| `src/stockcount/app.py`                       | FastAPI webhook + production wiring                           |
+| `src/stockcount/qr.py`                        | LINE deep link + printable QR label                           |
+| `scripts/import_csv.py`                       | push CSV + layout into Supabase                               |
+| `scripts/make_qr.py`                          | write one PNG label per shelf                                 |
+| `scripts/smoke_supabase.py`                   | exercise `SupabaseRepo` against the real project              |
+| `supabase/migrations/20260928000000_init.sql` | schema + bucket                                               |
+| `.github/workflows/tests.yml`                 | run pytest on push                                            |
+| `.github/workflows/db-migrate.yml`            | `supabase db push` on push to `main`                          |
 
 ---
 
 ### Task 1: Project scaffold + config loader
-
+{please tell objective of the task in every task}
 **Files:**
 - Create: `pyproject.toml`, `.gitignore`, `.env.example`, `config.yaml`, `src/stockcount/__init__.py`, `src/stockcount/config.py`, `.github/workflows/tests.yml`
 - Test: `tests/test_config.py`
@@ -138,12 +138,13 @@ LINE_CHANNEL_SECRET=
 LINE_CHANNEL_ACCESS_TOKEN=
 SUPABASE_URL=
 SUPABASE_SERVICE_KEY=
+ROBOFLOW_MODEL_API_KEY=
 ```
 
 `config.yaml`:
 ```yaml
 # ระบบนับสต็อกหลังร้าน — ไฟล์นี้แก้เองได้ (commit ขึ้น GitHub ได้ ไม่มีความลับ)
-branch: ladprao
+branch: mbk
 
 # Basic ID ของ LINE OA (ขึ้นต้นด้วย @) — ดูใน LINE Official Account Manager
 line_basic_id: "@CHANGE-ME"
@@ -152,14 +153,17 @@ line_basic_id: "@CHANGE-ME"
 allowed_line_user_ids: []
 
 # ผังชั้นหลังร้าน: รหัสชั้น → สินค้าตามลำดับที่ bot จะแสดง
-# ⚠️ ตัวอย่าง 2 ชั้น — ณัฑฒ์ต้องเดินจดผังจริงแล้วแก้ตรงนี้
+#  ตัวอย่าง 3 ชั้น ทั้งฝั่งซ้ายและขวา
 shelves:
-  A1:
+  L1:
     label: "ชั้นเหล็กซ้าย แถว 1"
     skus: [HB0001, HB0003, HB0004]
-  A2:
+  L2:
     label: "ชั้นเหล็กซ้าย แถว 2"
     skus: [NA0025, NA0026]
+  L3:
+	label: "ชั้นเหล็กซ้าย แถว 3"
+	skus : [G]  
 ```
 
 `src/stockcount/__init__.py`:
