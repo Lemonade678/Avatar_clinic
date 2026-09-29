@@ -26,7 +26,7 @@ Phase 1 = digital counts + shelf photos (this spec) · Phase 2 = YOLO counts fro
 | Back store, Ladprao branch | Front store, other branches |
 | LINE chat bot (Python) | LIFF / JavaScript web front end |
 | One QR per shelf | One QR per product |
-| Starting stock from the 27/9/2026 count sheet (transcribed to CSV) | Automatic link to the existing stock system (later: export → import) |
+| Starting stock from the 28/9/2026 count sheet (transcribed to CSV) | Automatic link to the existing stock system (later: export → import) |
 | Shelf photos (bot asks for one per shelf) | YOLO / Roboflow (phase 2), self-training (phase 3), Typhoon OCR (dropped — QR replaces reading labels) |
 
 ## Architecture
@@ -45,7 +45,7 @@ Phase 1 = digital counts + shelf photos (this spec) · Phase 2 = YOLO counts fro
 stock-count/
 ├── config.yaml              # branch, LINE basic ID, allowlist, shelf → SKU layout
 ├── .env.example             # LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_KEY
-├── data/stock_2026-09-27.csv   # transcribed sheet (sku, name, category, back_qty, front_qty, system_qty, code_hint, needs_review)
+├── data/stock_2026-09-28.csv   # transcribed sheet (sku, name, category, back_qty, front_qty, system_qty, needs_review)
 ├── supabase/migrations/*.sql   # schema — the source of truth lives in git
 ├── src/stockcount/
 │   ├── config.py     # load + validate config.yaml
@@ -67,7 +67,7 @@ Each file has one job — `parser` and `service` are testable without LINE or Su
 | `products` | `sku` PK, `name`, `category` | from the CSV |
 | `shelves` | `code` PK (e.g. `A2`), `label` | from config.yaml |
 | `shelf_products` | `shelf_code`, `sku`, `position` | order the bot shows |
-| `stock_snapshots` | `sku`, `back_qty`, `as_of` | system stock · the POC has one snapshot (27/9/2026) |
+| `stock_snapshots` | `sku`, `back_qty`, `as_of` | system stock · the POC has one snapshot (28/9/2026) |
 | `count_sessions` | `id`, `count_date` unique, `opened_at`, `closed_at` | one per day |
 | `counts` | `session_id`, `shelf_code`, `sku`, `expected_qty`, `counted_qty`, `line_user_id`, `updated_at` | unique (session, sku) · a recount overwrites |
 | `user_state` | `line_user_id` PK, `shelf_code`, `opened_at` | the shelf a user has open · expires after 10 minutes |
@@ -137,7 +137,7 @@ Photos in `shelf-photos` + confirmed counts → label in Roboflow → YOLO-seg �
 **Phase 3 — self-training:** new staff photos + staff-confirmed/corrected counts = new labels automatically → once enough accumulate → retrain → deploy the new model only if it beats the current one on the test set (never ship a worse model) · Phase 1 must always store the photo and the counts together so phase 3 is possible
 
 ## ❓ Open questions
-- ❓ Product codes on pages 2–3 of the count sheet were cropped at the left edge (only `…013`, `…023` visible) → ✅ decided: temporary codes `TEMP-P<page>-<nn>`, the readable code fragment in the `code_hint` column, `needs_review=true` in the CSV · every foreign key to `products.sku` uses `on update cascade` so ณัฑฒ์ can rename them to the real codes later
+- ✅ ~~Product codes on pages 2–3 were cropped~~ → the 28/9 sheet shows all 105 codes and is now the starting data, so there are no TEMP codes · foreign keys to `products.sku` still use `on update cascade` in case a code needs correcting
 - ❓ Which products sit on which back-store shelf → ณัฑฒ์ walks the room and writes the layout into `config.yaml`
 - ❓ Is the manager's permission needed before sticking QR codes on the shelves
 - ❓ Is the LINE OA a new personal account of ณัฑฒ์'s or the company account

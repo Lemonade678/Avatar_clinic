@@ -26,7 +26,7 @@ created: 2026-09-28
 | หลังร้าน สาขาลาดพร้าว | หน้าร้าน, สาขาอื่น |
 | LINE bot แชท (Python) | LIFF / หน้าเว็บ JS |
 | QR ชั้นละ 1 อัน | QR ต่อสินค้า |
-| ยอดตั้งต้นจากใบนับ 27/9/2026 (ถอดเป็น CSV) | ต่อระบบสต็อกเดิมอัตโนมัติ (อนาคต: export → import) |
+| ยอดตั้งต้นจากใบนับ 28/9/2026 (ถอดเป็น CSV) | ต่อระบบสต็อกเดิมอัตโนมัติ (อนาคต: export → import) |
 | เก็บรูปชั้น (bot ขอรูปทุกชั้น) | YOLO / Roboflow (เฟส 2), เทรนตัวเองอัตโนมัติ (เฟส 3), Typhoon OCR (ตัดออก — QR แทนการอ่านป้าย) |
 
 ## สถาปัตยกรรม
@@ -45,7 +45,7 @@ created: 2026-09-28
 stock-count/
 ├── config.yaml              # สาขา, allowlist, ผังชั้น → SKU
 ├── .env.example             # LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_KEY
-├── data/stock_2026-09-27.csv   # ถอดจากใบนับ (sku, name, category, back_qty, front_qty, system_qty, code_hint, needs_review)
+├── data/stock_2026-09-28.csv   # ถอดจากใบนับ (sku, name, category, back_qty, front_qty, system_qty, needs_review)
 ├── supabase/migrations/*.sql   # schema — source of truth อยู่ใน git
 ├── src/stockcount/
 │   ├── config.py     # โหลด + validate config.yaml
@@ -67,7 +67,7 @@ stock-count/
 | `products` | `sku` PK, `name`, `category` | จาก CSV |
 | `shelves` | `code` PK (เช่น `A2`), `label` | จาก config.yaml |
 | `shelf_products` | `shelf_code`, `sku`, `position` | ลำดับที่ bot แสดง |
-| `stock_snapshots` | `sku`, `back_qty`, `as_of` | ยอดในระบบ · POC มีชุดเดียว (27/9/2026) |
+| `stock_snapshots` | `sku`, `back_qty`, `as_of` | ยอดในระบบ · POC มีชุดเดียว (28/9/2026) |
 | `count_sessions` | `id`, `count_date` unique, `opened_at`, `closed_at` | รอบละวัน |
 | `counts` | `session_id`, `shelf_code`, `sku`, `expected_qty`, `counted_qty`, `line_user_id`, `updated_at` | unique (session, sku) · นับซ้ำ = ทับค่าเดิม |
 | `user_state` | `line_user_id` PK, `shelf_code`, `opened_at` | ชั้นที่ผู้ใช้เปิดอยู่ · หมดอายุ 10 นาที |
@@ -136,7 +136,7 @@ shelves:
 **เฟส 3 — เทรนตัวเอง:** รูปใหม่ที่พนักงานส่ง + ยอดที่พนักงานยืนยัน/แก้ = label ใหม่อัตโนมัติ → สะสมครบเกณฑ์ → เทรนโมเดลรอบใหม่ → ใช้ตัวใหม่เฉพาะเมื่อแม่นกว่าตัวเดิมบนชุดทดสอบ (ไม่ปล่อยโมเดลที่แย่ลงขึ้นใช้งาน) · spec เฟส 1 ต้องเก็บรูปกับยอดคู่กันให้ครบ เพื่อให้เฟส 3 เป็นไปได้
 
 ## ❓ คำถามค้าง
-- ❓ รหัสสินค้าหน้า 2–3 ของใบนับถูกตัดขอบซ้าย (เห็นแค่ `…013`, `…023`) → ✅ ตัดสินแล้ว: ใช้รหัสชั่วคราว `TEMP-P<หน้า>-<ลำดับ>` + เลขท้ายที่อ่านได้เก็บในคอลัมน์ `code_hint` + `needs_review=true` ใน CSV · FK ทุกตัวที่ชี้ `products.sku` ใช้ `on update cascade` เพื่อให้เปลี่ยนรหัสทีหลังได้ · ณัฑฒ์แก้เป็นรหัสจริงทีหลัง
+- ✅ ~~รหัสสินค้าหน้า 2–3 ถูกตัด~~ → ได้ใบนับ 28/9 ที่เห็นรหัสครบ 105 ตัว ใช้เป็นข้อมูลตั้งต้นแทน ไม่มีรหัส TEMP แล้ว · FK ที่ชี้ `products.sku` ยังตั้ง `on update cascade` เผื่อแก้รหัสทีหลัง
 - ❓ สินค้าไหนอยู่ชั้นไหนหลังร้าน → ณัฑฒ์ต้องเดินจดผังชั้น (ใส่ใน `config.yaml`)
 - ❓ ต้องขออนุญาตหัวหน้าก่อนแปะ QR ที่ชั้นไหม
 - ❓ LINE OA ใช้บัญชีใหม่ของณัฑฒ์ หรือบัญชีบริษัท

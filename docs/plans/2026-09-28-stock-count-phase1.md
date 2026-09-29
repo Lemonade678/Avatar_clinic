@@ -11,11 +11,15 @@ created: 2026-09-28
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Back-store staff scan a shelf QR, type counts into a LINE chat bot, and every count (plus an optional shelf photo) lands in Supabase per day, with a mismatch summary against the system stock.
+**Goal:** Back-store staff scan a shelf QR type, counts into a LINE chat bot, and every count (plus an optional shelf photo) lands in Supabase per day, with a mismatch summary against the system stock.
+
+Back-store staff scan a shelf QR type that POPOUT the sku type with number of stock in from stock system muc hlike  and 
 
 **Architecture:** A FastAPI webhook receives LINE events, verifies the signature, and hands text/images to a pure `StockService` (rules) that talks to a `Repo` interface. `SupabaseRepo` is the real store; `InMemoryRepo` backs the tests. The command `parser`, the reply `messages`, the `config` loader, the CSV loader and QR builder are small, pure modules. The schema lives in `supabase/migrations/` and a GitHub Action pushes it (Supabase free plan).
 
 **Tech Stack:** Python 3.12 (min 3.11) · FastAPI + uvicorn · line-bot-sdk v3 · supabase-py v2 · PyYAML · qrcode + Pillow ≥10.1 · python-dotenv · tzdata · pytest + httpx · Supabase CLI via `npx` (Node 24 is installed) · ngrok for local HTTPS.
+
+**Status 2026-09-29:** Task 1 ✅, Task 2 ✅, schema + `db-migrate` Action + `scripts/import_csv.py` ✅ (pulled forward from Tasks 7–8). Next: Tasks 3–6, then `qr.py`/`make_qr.py` (Task 7) and `SupabaseRepo`/smoke script (Task 8).
 
 **Spec:** `docs/specs/2026-09-28-stock-count-design.md` ([[2026-09-28-stock-count-design]])
 
@@ -32,7 +36,7 @@ created: 2026-09-28
 - Expected quantity = `back_qty` from the latest `stock_snapshots` row for that SKU (POC counts the back store only).
 - Saving a shelf is all-or-nothing (one upsert statement); recounting a shelf overwrites the earlier numbers for that session.
 - Supabase is on the **free plan** → migrations are applied by a GitHub Action running `supabase db push` on pushes to `main`.
-- SKUs whose code was cropped off the paper sheet use `TEMP-P<page>-<nn>` with `needs_review=true`; every foreign key to `products.sku` uses `on update cascade` so ณัฑฒ์ can rename them later.
+- Product master = `data/stock_2026-09-28.csv` (105 real SKUs); every foreign key to `products.sku` uses `on update cascade` so a code can be corrected later without breaking history.
 - Photos go to the private Supabase Storage bucket `shelf-photos`.
 - LINE text replies are capped at 5,000 characters.
 
@@ -42,7 +46,7 @@ created: 2026-09-28
 2. **Counting after midnight** — the server clock is UTC; a count at 01:30 Bangkok on 29/09 must go into the 29/09 session, not 28/09 (test in Task 5).
 3. **CSV re-saved from Excel** — Excel adds a UTF-8 BOM; the loader must still find the `sku` column (test in Task 2).
 4. **LINE reply fails** (expired reply token, redelivered event) — the webhook must still answer 200 so LINE does not retry forever, and the count must already be saved (test in Task 6).
-5. **Renaming a TEMP SKU after counts exist** — updating `products.sku` must carry through to counts/snapshots/shelf layout instead of failing (migration in Task 8, checked by the smoke script in Task 8).
+5. **Correcting a product code after counts exist** — updating `products.sku` must carry through to counts/snapshots/shelf layout instead of failing (migration in Task 8, checked by the smoke script in Task 8).
 
 ## File Map
 
@@ -51,7 +55,7 @@ created: 2026-09-28
 | `pyproject.toml` | package + dependencies + pytest config |
 | `config.yaml` | branch, LINE basic ID, allowlist, shelf → SKU layout |
 | `.env.example` | names of the secrets |
-| `data/stock_2026-09-27.csv` | stock sheet transcribed from the 3 photographed pages |
+| `data/stock_2026-09-28.csv` | stock sheet transcribed from the 3 photographed pages |
 | `src/stockcount/config.py` | load + validate `config.yaml` → `AppConfig` |
 | `src/stockcount/stock_csv.py` | read the CSV → `StockRow` list |
 | `src/stockcount/seed.py` | config + rows → rows to insert (pure) |
@@ -348,367 +352,14 @@ git commit -m "feat: project scaffold and config.yaml loader"
 
 ---
 
-### Task 2: Stock sheet CSV + loader + seed builder
+### Task 2: Stock sheet CSV + loader + seed builder — ✅ DONE 2026-09-29
 
-**Files:**
-- Create: `data/stock_2026-09-27.csv`, `src/stockcount/stock_csv.py`, `src/stockcount/seed.py`
-- Test: `tests/test_stock_csv.py`, `tests/test_seed.py`
+Built from the **28/9/2026** sheet, which shows every product code, so there are no `TEMP-*` codes and no `code_hint` column.
 
-**Interfaces:**
-- Consumes: `AppConfig`, `load_config` (Task 1)
-- Produces:
-  - `class StockCsvError(ValueError)`
-  - `@dataclass(frozen=True) class StockRow: sku: str; name: str; category: str; back_qty: int; front_qty: int; system_qty: int; code_hint: str; needs_review: bool`
-  - `load_stock_csv(path: str | Path) -> list[StockRow]`
-  - `class SeedError(ValueError)`
-  - `@dataclass(frozen=True) class SeedData: products: list[dict]; shelves: list[dict]; shelf_products: list[dict]; snapshots: list[dict]`
-  - `build_seed(config: AppConfig, rows: list[StockRow], as_of: date) -> SeedData`
-
-Transcription rules (already applied below): only the **printed** columns หลังร้าน / หน้าร้าน / คงเหลือ are used — handwritten marks are ignored. Printed numbers sit about half a row above their names, so rows were matched **by order inside each category** (the number of number-rows equals the number of names in every category). Page 2–3 codes were cropped → `TEMP-P<page>-<nn>`, visible code fragment in `code_hint`, `needs_review=true`. Category names that were cropped are best guesses and also flagged.
-
-- [ ] **Step 1: Write the data file** — `data/stock_2026-09-27.csv` (UTF-8, 105 rows)
-
-```csv
-sku,name,category,back_qty,front_qty,system_qty,code_hint,needs_review
-NA0025,ROZY Bag (15g.),Collagen,0,7,7,,false
-NA0026,CELEB Bag (15g.),Collagen,0,8,8,,false
-NA0029,ROZY Box (15g. x 30 Sheets),Collagen,0,0,0,,false
-NA0030,CELEB Box (15g. x 30 Sheets),Collagen,0,0,0,,false
-HB0007,ยาดอง,สมุนไพร (ชง),0,8,8,,false
-HB0008,ยาธาตุ,สมุนไพร (ชง),0,12,12,,false
-HB0028,ลูกประคบ,สมุนไพร (ต้ม),0,0,0,,false
-HB0031,ลักปิด-ลักเปิด,สมุนไพร (ต้ม),0,0,0,,false
-HB0045,มะเร็งปอด(ต้ม),สมุนไพร (ต้ม),0,1,1,,false
-HB0072,มะเร็งลาม(ต้ม),สมุนไพร (ต้ม),0,2,2,,false
-HB0073,มะสุริกา(ต้ม),สมุนไพร (ต้ม),0,0,0,,false
-HB0075,กรามช้าง(ต้ม),สมุนไพร (ต้ม),0,0,0,,false
-HB0082,เบาหวาน(ต้ม),สมุนไพร (ต้ม),0,5,5,,false
-HB0083,ฝีกตะนารายณ์(ต้ม),สมุนไพร (ต้ม),0,0,0,,true
-HB0086,ไตต้ม,สมุนไพร (ต้ม),0,2,2,,false
-HB0104,ล้างปอด(ต้ม),สมุนไพร (ต้ม),0,0,0,,false
-HB0105,ล้างปอด-เสมหะ(ต้ม),สมุนไพร (ต้ม),0,0,0,,false
-HB0098,MALA,สมุนไพร (ทา-สูดดม),0,0,0,,false
-HB0116,MALA Madam Blossom,สมุนไพร (ทา-สูดดม),0,12,12,,false
-HB0118,MALA Box Set X'mas 2022,สมุนไพร (ทา-สูดดม),0,0,0,,false
-HB0121,MALA-mini,สมุนไพร (ทา-สูดดม),0,30,30,,false
-HB0122,MALA-mini set,สมุนไพร (ทา-สูดดม),0,0,0,,false
-HB0123,MALA Merry X'mas 20gram,สมุนไพร (ทา-สูดดม),0,0,0,,false
-HB0124,MALA Box Set X'mas 2026,สมุนไพร (ทา-สูดดม),0,2,2,,false
-HB0049,CABA,สมุนไพร (น้ำ),0,0,0,,false
-HB0064,น้ำกล้วย,สมุนไพร (น้ำ),0,0,0,,false
-HB0090,สเปรย์ฉีดเข่า,สมุนไพร (น้ำ),0,27,27,,false
-HB0001,อระกาวาท,สมุนไพร (ผง),10,9,19,,false
-HB0003,กัณฑรา,สมุนไพร (ผง),5,5,10,,false
-HB0004,อโธ,สมุนไพร (ผง),10,9,19,,false
-HB0005,มัตถะ,สมุนไพร (ผง),0,0,0,,false
-HB0006,ไตรธาตุ,สมุนไพร (ผง),5,2,7,,false
-HB0009,ขัดเข่า,สมุนไพร (ผง),0,10,10,,false
-HB0010,มดลูก,สมุนไพร (ผง),10,3,13,,false
-HB0011,อังมะ,สมุนไพร (ผง),10,11,21,,false
-TEMP-P2-01,มุตา,สมุนไพร (ผง),4,0,4,,true
-TEMP-P2-02,ต่อมลูกหมาก,สมุนไพร (ผง),0,9,9,,true
-TEMP-P2-03,เตโช,สมุนไพร (ผง),0,0,0,,true
-TEMP-P2-04,รากขาว,สมุนไพร (ผง),10,7,17,,true
-TEMP-P2-05,ภูมิแพ้ แก้ไอ,สมุนไพร (ผง),10,6,16,,true
-TEMP-P2-06,ล้อมตับ ดับพิษ,สมุนไพร (ผง),10,7,17,,true
-TEMP-P2-07,เบาหวาน,สมุนไพร (ผง),20,10,30,,true
-TEMP-P2-08,หทัยรักษ์,สมุนไพร (ผง),0,19,19,,true
-TEMP-P2-09,บรรจบธาตุ,สมุนไพร (ผง),0,0,0,,true
-TEMP-P2-10,ล้างมดลูก,สมุนไพร (ผง),0,7,7,,true
-TEMP-P2-11,มะสุริกา(ผง),สมุนไพร (ผง),10,2,12,,true
-TEMP-P2-12,ปัปผะ,สมุนไพร (ผง),0,10,10,,true
-TEMP-P2-13,ฝีในท้อง,สมุนไพร (ผง),0,8,8,,true
-TEMP-P2-14,ฝีฟองสมุทร,สมุนไพร (ผง),5,3,8,,true
-TEMP-P2-15,ช้ำรั่ว,สมุนไพร (ผง),13,0,13,,true
-TEMP-P2-16,มะเร็งปอด(ผง),สมุนไพร (ผง),0,7,7,,true
-TEMP-P2-17,กรามช้าง,สมุนไพร (ผง),6,0,6,,true
-TEMP-P2-18,ลักปิด-ลักเปิด(กระปุก),สมุนไพร (ผง),0,4,4,…6,true
-TEMP-P2-19,ศิระ,สมุนไพร (ผง),10,6,16,…3,true
-TEMP-P2-20,ดุลยธาตุ,สมุนไพร (ผง),12,5,17,…4,true
-TEMP-P2-21,ริดสีดวง,สมุนไพร (ผง),5,7,12,…1,true
-TEMP-P2-22,ฝีหมอบ (ใหม่),สมุนไพร (ผง),10,6,16,…2,true
-TEMP-P2-23,รากขาว(CV-19),สมุนไพร (ผง),0,0,0,…4,true
-TEMP-P2-24,มหาจักรพรรดิ(เม็ด),สมุนไพร (เม็ด),10,7,17,…13,true
-TEMP-P2-25,กรดไหลย้อน(เม็ด),สมุนไพร (เม็ด),0,9,9,…23,true
-TEMP-P2-26,ปัฐพี(เม็ด),สมุนไพร (เม็ด),10,10,20,…25,true
-TEMP-P2-27,ราชพฤกษ์(เม็ด),สมุนไพร (เม็ด),0,13,13,…026,true
-TEMP-P2-28,กษัยเส้น(เม็ด),สมุนไพร (เม็ด),0,13,13,…027,true
-TEMP-P2-29,มหาวัฒนะ(เม็ด),สมุนไพร (เม็ด),10,10,20,…030,true
-TEMP-P2-30,ตัวหอม(เม็ด),สมุนไพร (เม็ด),0,0,0,…043,true
-TEMP-P2-31,เตโช(เม็ด),สมุนไพร (เม็ด),5,0,5,…046,true
-TEMP-P2-32,7 สิง(เม็ด),สมุนไพร (เม็ด),0,0,0,…047,true
-TEMP-P2-33,อังมะ(เม็ด),สมุนไพร (เม็ด),0,0,0,…048,true
-TEMP-P2-34,มะเร็งปอด(เม็ด),สมุนไพร (เม็ด),0,0,0,…0050,true
-TEMP-P2-35,ล้อมตับดับพิษ(เม็ด),สมุนไพร (เม็ด),0,0,0,…0051,true
-TEMP-P2-36,ไตรธาตุ(เม็ด),สมุนไพร (เม็ด),4,0,4,…0053,true
-TEMP-P2-37,อโธ(เม็ด),สมุนไพร (เม็ด),0,0,0,…0054,true
-TEMP-P2-38,รุสพิสดาร(เม็ด),สมุนไพร (เม็ด),10,5,15,…0055,true
-TEMP-P2-39,ขัดเข่า(เม็ด),สมุนไพร (เม็ด),6,0,6,…0058,true
-TEMP-P2-40,หทัยรักษ์(เม็ด),สมุนไพร (เม็ด),0,0,0,…0059,true
-TEMP-P2-41,มดลูก(เม็ด),สมุนไพร (เม็ด),5,0,5,…0060,true
-TEMP-P3-01,ภูมิแพ้-แก้ไอ(เม็ด),สมุนไพร (เม็ด),10,0,10,,true
-TEMP-P3-02,ต่อมลูกหมาก(เม็ด),สมุนไพร (เม็ด),3,0,3,,true
-TEMP-P3-03,ช้ำรั่ว(เม็ด),สมุนไพร (เม็ด),10,0,10,,true
-TEMP-P3-04,กรามช้าง(เม็ด),สมุนไพร (เม็ด),0,0,0,,true
-TEMP-P3-05,รากขาว(เม็ด),สมุนไพร (เม็ด),0,0,0,,true
-TEMP-P3-06,ริดสีดวง(เม็ด),สมุนไพร (เม็ด),4,0,4,,true
-TEMP-P3-07,กล่อมนางนอน(เม็ด) ใหม่,สมุนไพร (เม็ด),0,24,24,,true
-TEMP-P3-08,บำรุงเลือด(เม็ด)(สูตรใหม่),สมุนไพร (เม็ด),0,8,8,,true
-TEMP-P3-09,พัทธะ,ชุด,0,2,2,,true
-TEMP-P3-10,เตโช-ลูกกลอน,สมุนไพร (ลูกกลอน),20,11,31,…8,true
-TEMP-P3-11,7 สิง(ลูกกลอน),สมุนไพร (ลูกกลอน),20,13,33,…9,true
-TEMP-P3-12,ลูกแปลกแม่(ลูกกลอน),สมุนไพร (ลูกกลอน),10,6,16,…1,true
-TEMP-P3-13,ยาหอมสุวรรณ 5ml,สมุนไพร (ลูกกลอน),0,26,26,…08,true
-TEMP-P3-14,สราญรมย์,สมุนไพร (ลูกกลอน),0,7,7,…13,true
-TEMP-P3-15,ฝีหมอบ (ลูกกลอน),สมุนไพร (ลูกกลอน),0,0,0,…20,true
-TEMP-P3-16,หนังสือ รับกำจัดโรค,หนังสือ,0,0,0,…002,true
-TEMP-P3-17,หนังสือโรคสตรี,หนังสือ,0,2,2,…006,true
-TEMP-P3-18,หนังสือโรคภูมิแพ้,หนังสือ,0,3,3,…007,true
-TEMP-P3-19,กินน้อยอยู่นาน (ใหม่),หนังสือ,0,0,0,…008,true
-TEMP-P3-20,หนังสือโรคกรดไหลย้อน,หนังสือ,0,3,3,…009,true
-TEMP-P3-21,เบาหวานรักษาได้VL5,หนังสือ,0,1,1,…0010,true
-TEMP-P3-22,เมซโซ,อาหารเสริม,0,19,19,…0009,true
-TEMP-P3-23,QUARTO 60Cap,อาหารเสริม,0,6,6,…A0016,true
-TEMP-P3-24,DUO 60 Cap,อาหารเสริม,0,0,0,…A0017,true
-TEMP-P3-25,KOVIA,อาหารเสริม,0,20,20,…A0021,true
-TEMP-P3-26,Touch Up (7 Sheets),อาหารเสริม,0,14,14,…A0027,true
-TEMP-P3-27,Tidy (7 Sheets),อาหารเสริม,0,9,9,…A0028,true
-TEMP-P3-28,PANDORA (Egg Shell Membrane),อาหารเสริม,0,0,0,…A0031,true
-TEMP-P3-29,แพนดอร่าทู (PANDORA II),อาหารเสริม,30,-5,25,…A0032,true
-```
-
-- [ ] **Step 2: Write the failing tests**
-
-`tests/test_stock_csv.py`:
-```python
-from pathlib import Path
-
-import pytest
-
-from stockcount.stock_csv import StockCsvError, load_stock_csv
-
-HEADER = "sku,name,category,back_qty,front_qty,system_qty,code_hint,needs_review\n"
-REPO_CSV = Path(__file__).parents[1] / "data" / "stock_2026-09-27.csv"
-
-
-def write(tmp_path, body, bom=False):
-    p = tmp_path / "s.csv"
-    p.write_text(("\ufeff" if bom else "") + HEADER + body, encoding="utf-8")
-    return p
-
-
-def test_reads_typed_row(tmp_path):
-    [row] = load_stock_csv(write(tmp_path, "HB0001,อระกาวาท,สมุนไพร (ผง),10,9,19,,false\n"))
-    assert (row.sku, row.name, row.back_qty, row.front_qty, row.system_qty) == ("HB0001", "อระกาวาท", 10, 9, 19)
-    assert row.needs_review is False
-
-
-def test_excel_bom_is_ignored(tmp_path):
-    [row] = load_stock_csv(write(tmp_path, "HB0001,x,y,1,2,3,,false\n", bom=True))
-    assert row.sku == "HB0001"
-
-
-def test_negative_system_quantity_is_kept(tmp_path):
-    [row] = load_stock_csv(write(tmp_path, "X1,x,y,30,-5,25,,true\n"))
-    assert row.front_qty == -5
-    assert row.needs_review is True
-
-
-def test_duplicate_sku_is_rejected(tmp_path):
-    with pytest.raises(StockCsvError, match="duplicate sku X1"):
-        load_stock_csv(write(tmp_path, "X1,a,c,1,1,2,,false\nX1,b,c,1,1,2,,false\n"))
-
-
-def test_non_integer_quantity_is_rejected(tmp_path):
-    with pytest.raises(StockCsvError, match="line 2"):
-        load_stock_csv(write(tmp_path, "X1,a,c,1.5,1,2,,false\n"))
-
-
-def test_missing_column_is_rejected(tmp_path):
-    p = tmp_path / "s.csv"
-    p.write_text("sku,name\nX1,a\n", encoding="utf-8")
-    with pytest.raises(StockCsvError, match="missing columns"):
-        load_stock_csv(p)
-
-
-def test_repo_sheet_has_105_rows_and_flags_temp_codes():
-    rows = load_stock_csv(REPO_CSV)
-    assert len(rows) == 105
-    assert all(r.needs_review for r in rows if r.sku.startswith("TEMP-"))
-    pandora = next(r for r in rows if r.sku == "TEMP-P3-29")
-    assert (pandora.back_qty, pandora.front_qty, pandora.system_qty) == (30, -5, 25)
-```
-
-`tests/test_seed.py`:
-```python
-from datetime import date
-from pathlib import Path
-
-import pytest
-
-from stockcount.config import load_config, parse_config
-from stockcount.seed import SeedError, build_seed
-from stockcount.stock_csv import StockRow, load_stock_csv
-
-ROOT = Path(__file__).parents[1]
-
-
-def row(sku, back=0):
-    return StockRow(sku, f"name-{sku}", "cat", back, 0, back, "", False)
-
-
-def test_builds_rows_for_every_table():
-    cfg = parse_config({"branch": "b", "line_basic_id": "@x", "shelves": {"A1": {"label": "L", "skus": ["S2", "S1"]}}})
-    seed = build_seed(cfg, [row("S1", 3), row("S2", 4)], date(2026, 9, 27))
-    assert seed.products == [
-        {"sku": "S1", "name": "name-S1", "category": "cat"},
-        {"sku": "S2", "name": "name-S2", "category": "cat"},
-    ]
-    assert seed.shelves == [{"code": "A1", "label": "L"}]
-    assert seed.shelf_products == [
-        {"shelf_code": "A1", "sku": "S2", "position": 1},
-        {"shelf_code": "A1", "sku": "S1", "position": 2},
-    ]
-    assert {"sku": "S1", "back_qty": 3, "as_of": "2026-09-27"} in seed.snapshots
-
-
-def test_config_sku_missing_from_csv_is_rejected():
-    cfg = parse_config({"branch": "b", "line_basic_id": "@x", "shelves": {"A1": {"skus": ["NOPE"]}}})
-    with pytest.raises(SeedError, match="NOPE"):
-        build_seed(cfg, [row("S1")], date(2026, 9, 27))
-
-
-def test_repo_config_matches_repo_csv():
-    seed = build_seed(load_config(ROOT / "config.yaml"), load_stock_csv(ROOT / "data" / "stock_2026-09-27.csv"), date(2026, 9, 27))
-    assert len(seed.products) == 105
-    assert {"shelf_code": "A1", "sku": "HB0001", "position": 1} in seed.shelf_products
-```
-
-- [ ] **Step 3: Run tests to verify they fail**
-
-Run: `.venv/Scripts/python -m pytest tests/test_stock_csv.py tests/test_seed.py -v`
-Expected: FAIL — `ModuleNotFoundError: No module named 'stockcount.stock_csv'`
-
-- [ ] **Step 4: Implement**
-
-`src/stockcount/stock_csv.py`:
-```python
-"""Read the transcribed stock sheet CSV into typed rows."""
-from __future__ import annotations
-
-import csv
-from dataclasses import dataclass
-from pathlib import Path
-
-REQUIRED_COLUMNS = ("sku", "name", "category", "back_qty", "front_qty", "system_qty", "code_hint", "needs_review")
-QTY_COLUMNS = ("back_qty", "front_qty", "system_qty")
-
-
-class StockCsvError(ValueError):
-    pass
-
-
-@dataclass(frozen=True)
-class StockRow:
-    sku: str
-    name: str
-    category: str
-    back_qty: int
-    front_qty: int
-    system_qty: int
-    code_hint: str
-    needs_review: bool
-
-
-def load_stock_csv(path: str | Path) -> list[StockRow]:
-    # utf-8-sig strips the BOM Excel adds when it re-saves the file
-    with open(path, encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f)
-        missing = [c for c in REQUIRED_COLUMNS if c not in (reader.fieldnames or [])]
-        if missing:
-            raise StockCsvError(f"missing columns: {missing}")
-
-        rows: list[StockRow] = []
-        seen: set[str] = set()
-        for line_no, rec in enumerate(reader, start=2):
-            sku = rec["sku"].strip()
-            if not sku:
-                raise StockCsvError(f"line {line_no}: empty sku")
-            if sku in seen:
-                raise StockCsvError(f"line {line_no}: duplicate sku {sku}")
-            seen.add(sku)
-            try:
-                back, front, system = (int(rec[c]) for c in QTY_COLUMNS)
-            except ValueError as e:
-                raise StockCsvError(f"line {line_no}: quantity is not a whole number") from e
-            rows.append(
-                StockRow(
-                    sku=sku,
-                    name=rec["name"].strip(),
-                    category=rec["category"].strip(),
-                    back_qty=back,
-                    front_qty=front,
-                    system_qty=system,
-                    code_hint=rec["code_hint"].strip(),
-                    needs_review=rec["needs_review"].strip().lower() == "true",
-                )
-            )
-    return rows
-```
-
-`src/stockcount/seed.py`:
-```python
-"""Turn config + stock rows into the rows the database seed needs. Pure: no I/O."""
-from __future__ import annotations
-
-from dataclasses import dataclass
-from datetime import date
-
-from .config import AppConfig
-from .stock_csv import StockRow
-
-
-class SeedError(ValueError):
-    pass
-
-
-@dataclass(frozen=True)
-class SeedData:
-    products: list[dict]
-    shelves: list[dict]
-    shelf_products: list[dict]
-    snapshots: list[dict]
-
-
-def build_seed(config: AppConfig, rows: list[StockRow], as_of: date) -> SeedData:
-    known = {r.sku for r in rows}
-    missing = sorted(sku for shelf in config.shelves.values() for sku in shelf.skus if sku not in known)
-    if missing:
-        raise SeedError(f"skus in config.yaml but not in CSV: {missing}")
-
-    return SeedData(
-        products=[{"sku": r.sku, "name": r.name, "category": r.category} for r in rows],
-        shelves=[{"code": s.code, "label": s.label} for s in config.shelves.values()],
-        shelf_products=[
-            {"shelf_code": s.code, "sku": sku, "position": i}
-            for s in config.shelves.values()
-            for i, sku in enumerate(s.skus, start=1)
-        ],
-        snapshots=[{"sku": r.sku, "back_qty": r.back_qty, "as_of": as_of.isoformat()} for r in rows],
-    )
-```
-
-- [ ] **Step 5: Run tests to verify they pass**
-
-Run: `.venv/Scripts/python -m pytest tests/test_stock_csv.py tests/test_seed.py -v`
-Expected: 10 passed
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add data src/stockcount/stock_csv.py src/stockcount/seed.py tests/test_stock_csv.py tests/test_seed.py
-git commit -m "feat: transcribed stock sheet, CSV loader and seed builder"
-```
+- `data/stock_2026-09-28.csv` — 105 rows, columns `sku,name,category,back_qty,front_qty,system_qty,needs_review` (`needs_review=true` only for HB0083 and NA0031, whose printed names are hard to read / truncated)
+- `src/stockcount/stock_csv.py` — `StockRow(sku, name, category, back_qty, front_qty, system_qty, needs_review)`, `load_stock_csv(path)`, `StockCsvError`; also rejects a row whose `system_qty != back_qty + front_qty` (all 105 rows pass — a check on the transcription)
+- `src/stockcount/seed.py` — `SeedData`, `build_seed(config, rows, as_of)`, `SeedError`
+- Tests: `tests/test_stock_csv.py` (8), `tests/test_seed.py` (3)
 
 ---
 
@@ -1825,7 +1476,7 @@ if __name__ == "__main__":
 ```python
 """Load the stock CSV + config.yaml layout into Supabase.
 
-Usage: .venv/Scripts/python scripts/import_csv.py data/stock_2026-09-27.csv 2026-09-27
+Usage: .venv/Scripts/python scripts/import_csv.py data/stock_2026-09-28.csv 2026-09-28
 """
 import os
 import sys
@@ -1916,7 +1567,7 @@ create table shelves (
   label text not null
 );
 
--- on update cascade everywhere: TEMP-* skus get renamed to real codes later
+-- on update cascade: product codes can be corrected later without breaking history
 create table shelf_products (
   shelf_code text not null references shelves(code) on update cascade on delete cascade,
   sku        text not null references products(sku) on update cascade,
@@ -2107,7 +1758,7 @@ def main() -> None:
         repo.set_user_state("U-smoke", "Z9", now)
         assert repo.get_user_state("U-smoke").shelf_code == "Z9"
         path = repo.save_photo(s.id, "Z9", "U-smoke", b"\xff\xd8smoke", now)
-        # renaming a sku must cascade into counts (TEMP-* codes get fixed later)
+        # correcting a sku must cascade into counts
         db.table("products").update({"sku": "SMOKE-2"}).eq("sku", "SMOKE-1").execute()
         assert repo.list_counts(s.id)[0].sku == "SMOKE-2", "on update cascade missing"
         repo.close_session(s.id, now)
@@ -2178,18 +1829,18 @@ git commit -m "feat: Supabase schema, SupabaseRepo, smoke script and migration A
   1. **GitHub** — create private repo `stock-count`; in `Avatar project/stock-count/` run `git remote add origin <url>` then `git push -u origin main`; open the Actions tab and see `tests` go green.
   2. **Supabase** — create project (free, region Singapore); copy Project ID (Settings → General), Project URL + `service_role` key (Settings → API), DB password (the one set at creation); create an access token at Account → Access Tokens; add GitHub repo secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_ID`; Actions → `db-migrate` → Run workflow → green; Table Editor shows 8 tables.
   3. **LINE** — create LINE Official Account (LINE Official Account Manager); Settings → Messaging API → Enable; note Basic ID (`@…`); in LINE Developers console copy Channel secret (Basic settings) and issue a long-lived Channel access token (Messaging API tab); in OA Manager turn **off** auto-reply and greeting messages (else the bot's replies get doubled).
-  4. **Run locally** — `cp .env.example .env` and fill the 4 values (never commit `.env`); put the Basic ID into `config.yaml` → `line_basic_id`; `.venv/Scripts/python scripts/smoke_supabase.py` → `SMOKE OK`; `.venv/Scripts/python scripts/import_csv.py data/stock_2026-09-27.csv 2026-09-27`; `.venv/Scripts/uvicorn stockcount.app:build_default_app --factory --port 8000`; in a 2nd terminal `ngrok http 8000`; paste `https://<ngrok>/callback` as Webhook URL, turn on "Use webhook", press Verify → Success.
+  4. **Run locally** — `cp .env.example .env` and fill the 4 values (never commit `.env`); put the Basic ID into `config.yaml` → `line_basic_id`; `.venv/Scripts/python scripts/smoke_supabase.py` → `SMOKE OK`; `.venv/Scripts/python scripts/import_csv.py data/stock_2026-09-28.csv 2026-09-28`; `.venv/Scripts/uvicorn stockcount.app:build_default_app --factory --port 8000`; in a 2nd terminal `ngrok http 8000`; paste `https://<ngrok>/callback` as Webhook URL, turn on "Use webhook", press Verify → Success.
   5. **Try it** — add the OA as friend from the phone; `.venv/Scripts/python scripts/make_qr.py`; open `out/qr/shelf-A1.png` on the computer screen, scan it with the phone's LINE camera, tap send; type the numbers; send a photo; type `สรุป`.
   - 🆘 rows: Verify fails → server/ngrok not running or URL missing `/callback`; bot replies twice → auto-reply still on; bot silent → `LINE_CHANNEL_SECRET` wrong (server log shows 400) or user not in `allowed_line_user_ids`; `SeedError` → a SKU in `config.yaml` is not in the CSV; ngrok URL changes each restart → re-paste the webhook URL; `db-migrate` red → one of the 3 secrets missing/typo.
 
 - [ ] **Step 2: Add to-dos** — in `To-do List.md` under `## 💻 ใช้คอม` → `### 🟡 สัปดาห์นี้`, matching existing line style, bump `updated:` to 2026-09-28:
   - `ตั้งค่า bot นับสต็อกให้ใช้ได้จริง (GitHub + Supabase + LINE + ngrok) 📘 [[guide-setup-stock-count-bot]] 🗓️ 2026-09-28 ⏱️ 90 นาที`
   - `เดินจดผังชั้นหลังร้าน (ชั้นไหนมีสินค้าอะไร เรียงยังไง) แล้วแก้ config.yaml 🗓️ 2026-09-28 ⏱️ 30 นาที`
-  - `ตรวจ data/stock_2026-09-27.csv: แก้รหัส TEMP-* เป็นรหัสจริง + เทียบตัวเลขกับใบจริง 🗓️ 2026-09-28 ⏱️ 20 นาที`
+  - `ตรวจชื่อสินค้า 2 ตัวใน data/stock_2026-09-28.csv ที่ needs_review=true (HB0083, NA0031) 🗓️ 2026-09-29 ⏱️ 5 นาที`
   - `จับเวลานับสต็อกหลังร้านแบบกระดาษ 1 รอบ (baseline เทียบกับ 15 นาที) 🗓️ 2026-09-28 ⏱️ 15 นาที`
   - and under `### 🤔 ตัดสินใจเอง`: `ถามหัวหน้าก่อนแปะ QR ที่ชั้น + ใช้ LINE OA ของใคร (ส่วนตัว/บริษัท) 🗓️ 2026-09-28 ⏱️ 10 นาที`
 
-- [ ] **Step 3: Write the session log** — `Code_MD/Code Session 2026-09-28 - Stock Count Phase 1.md` using the template at the bottom of `Code Hub - Avatar.md` (TL;DR · what/which files · decisions + why · ❓ open questions). Decisions to record: LINE chat not LIFF (Python only), QR per shelf, YAML config, show system qty (no blind count), TEMP codes, Action instead of built-in integration (free plan), on-update-cascade, OCR dropped. Open questions: deploy target, LINE OA owner, permission to put up QR, real shelf layout.
+- [ ] **Step 3: Write the session log** — `Code_MD/Code Session 2026-09-28 - Stock Count Phase 1.md` using the template at the bottom of `Code Hub - Avatar.md` (TL;DR · what/which files · decisions + why · ❓ open questions). Decisions to record: LINE chat not LIFF (Python only), QR per shelf, YAML config, show system qty (no blind count), 28/9 sheet with real codes replaced the TEMP codes, Action instead of built-in integration (free plan), on-update-cascade, OCR dropped. Open questions: deploy target, LINE OA owner, permission to put up QR, real shelf layout.
 
 - [ ] **Step 4: Update hubs** — top of "บันทึกแต่ละรอบ" in `Code Hub - Avatar.md` gets the session link; the Stock Count row status becomes `🟡 โค้ดเสร็จ · รอติดตั้ง`; in `Project - Stock Count.md` set `status: waiting`, `status_note: "โค้ดเสร็จ · รอติดตั้ง"`, add the guide + plan links to "อยู่ไหน", replace the log line with the session link.
 
