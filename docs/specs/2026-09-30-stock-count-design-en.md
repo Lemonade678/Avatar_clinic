@@ -163,7 +163,7 @@ flowchart LR
 | Supabase down | "Save failed, try again" · entered values stay |
 
 ## Testing
-- **Unit:** ✅ all done (30/9) — slot codes/layout, minimap, wrong keyboard layout, CSV, CV comparison, weekly report, time clock, Thai/English number words · 189 tests
+- **Unit:** ✅ all done (30/9) — slot codes/layout, minimap, wrong keyboard layout, CSV, CV comparison, weekly report, time clock, Thai/English number words · 191 tests
 - **Pages:** `TestClient` + fake LINE/Roboflow + `InMemoryRepo` · every page UTF-8 · product names escaped
 - **Real:** Supabase smoke script · a real phone (front camera) scanning one slot QR · time one full round + count taps
 
