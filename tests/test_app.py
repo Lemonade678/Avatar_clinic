@@ -211,3 +211,21 @@ def test_dev_mode_builds_from_the_csv_files(monkeypatch, no_dotenv):
     monkeypatch.setenv("DEV_USER_ID", "U-dev")
     client = TestClient(build_default_app())
     assert client.get("/map").status_code == 200
+
+
+def test_request_urls_with_keys_stay_out_of_the_logs(monkeypatch, no_dotenv):
+    import logging
+
+    monkeypatch.chdir(ROOT)
+    monkeypatch.setenv("APP_ENV", "dev")
+    monkeypatch.delenv("SUPABASE_URL", raising=False)
+    build_default_app()
+    assert logging.getLogger("httpx").getEffectiveLevel() >= logging.WARNING
+
+
+def test_dev_mode_refuses_to_run_on_railway(monkeypatch, no_dotenv):
+    monkeypatch.chdir(ROOT)
+    monkeypatch.setenv("APP_ENV", "dev")
+    monkeypatch.setenv("RAILWAY_PROJECT_ID", "abc")
+    with pytest.raises(RuntimeError, match="Railway"):
+        build_default_app()

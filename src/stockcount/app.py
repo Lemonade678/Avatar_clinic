@@ -246,7 +246,11 @@ def build_default_app() -> FastAPI:
 
     load_dotenv()
     logging.basicConfig(level=logging.INFO)
+    # httpx logs every request URL at INFO — Roboflow's key travels in the URL, so keep it out of the logs
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     dev = os.environ.get("APP_ENV") == "dev"
+    if dev and any(name.startswith("RAILWAY_") for name in os.environ):
+        raise RuntimeError("APP_ENV=dev skips the LINE login — never use it on Railway")
     config = load_config(os.environ.get("STOCKCOUNT_CONFIG", "config.yaml"))
 
     secret = os.environ.get("SESSION_SECRET")
