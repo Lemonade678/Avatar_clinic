@@ -3,6 +3,15 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+from typing import Protocol
+
+
+class CvUnavailable(RuntimeError):
+    """The model could not answer (not configured, timeout, HTTP error) — counts are still saved."""
+
+
+class CvClient(Protocol):
+    def predict(self, image: bytes) -> list[dict]: ...  # [{"class": "bottle", "confidence": 0.9}, ...]
 
 
 @dataclass(frozen=True)

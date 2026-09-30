@@ -2,16 +2,16 @@
 
 Each wall is drawn as seen from the door: storeys top to bottom, positions left to right.
 Status comes from the stock sheet quantity: > 0 must be checked, 0 = not stocked (skip),
-< 0 = the system record itself is wrong.
+< 0 = the system record itself is wrong. Once counted today: "done" (matches) or "diff".
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .layout import Placement
 from .stock_csv import StockRow
 
-STATUS_ORDER = ("problem", "check", "empty", "free")  # worst first
+STATUS_ORDER = ("problem", "diff", "check", "done", "empty", "free")  # worst first
 SIDES = ("L", "R")
 
 
@@ -21,6 +21,7 @@ class MapItem:
     name: str
     qty: int
     status: str
+    counted: int | None = None
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,7 @@ class MapCell:
     storey: int
     position: int
     items: tuple[MapItem, ...]
+    flagged: bool = False  # the CV cross-check disagreed with today's counts
 
     @property
     def status(self) -> str:
@@ -101,3 +103,25 @@ def build_minimap(placements: list[Placement], rows: list[StockRow], qty_field: 
         placed=len(placed),
         to_check=sum(1 for i in items if i.status == "check"),
     )
+
+
+def apply_progress(minimap: Minimap, counted: dict[str, int], flagged: set[str]) -> Minimap:
+    """Overlay today's counts: counted items become "done" (matches the system) or "diff"."""
+
+    def item(i: MapItem) -> MapItem:
+        if i.sku not in counted:
+            return i
+        value = counted[i.sku]
+        return replace(i, counted=value, status="done" if value == i.qty else "diff")
+
+    walls = tuple(
+        replace(
+            wall,
+            rows=tuple(
+                tuple(replace(c, items=tuple(item(i) for i in c.items), flagged=c.code in flagged) for c in row)
+                for row in wall.rows
+            ),
+        )
+        for wall in minimap.walls
+    )
+    return replace(minimap, walls=walls)
