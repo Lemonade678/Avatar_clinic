@@ -1,13 +1,13 @@
 ---
 tags: [plan, code, avatar-clinic]
 aliases: [Stock Count plan (29/9), แผนนับสต็อกเฟส 1 (29/9)]
-status: draft
-status_note: "ฉบับ 29/9 — มีคอมเมนต์ {} ของณัฑฒ์ รอปรับตาม design ใหม่"
+status: done
+status_note: "ฉบับเก่า — ใช้ 2026-09-30-stock-count-phase1 แทน"
 created: 2026-09-29
 ---
 # Stock Count Phase 1 Implementation Plan
 
-← [[Project - Stock Count]] · [[2026-09-29-stock-count-design]] · 🇹🇭 ฉบับไทย: [[2026-09-29-stock-count-phase1-th]] · 🕘 ฉบับก่อน: [[2026-09-28-stock-count-phase1]]
+← [[Project - Stock Count]] · [[2026-09-29-stock-count-design]] · 🇹🇭 ฉบับไทย: [[2026-09-29-stock-count-phase1-th]] · 🕘 ฉบับก่อน: [[2026-09-28-stock-count-phase1]] · 🆕 ฉบับล่าสุด: [[2026-09-30-stock-count-phase1]]
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

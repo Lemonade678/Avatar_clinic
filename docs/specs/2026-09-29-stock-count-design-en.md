@@ -1,13 +1,13 @@
 ---
 tags: [spec, code, avatar-clinic, computer-vision, english]
 aliases: [Stock Count spec (EN, 29/9), Stock Count design English (29/9)]
-status: draft
-status_note: "English companion of the 29/9 Thai spec — the Thai file is the source of truth if they ever differ"
+status: done
+status_note: "ฉบับเก่า — ใช้ 2026-09-30-stock-count-design-en แทน"
 created: 2026-09-29
 ---
 # 📦 Spec — Back-store stock counting (POC · MBK branch)
 
-← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇹🇭 ภาษาไทย: [[2026-09-29-stock-count-design]] · 🕘 previous: [[2026-09-28-stock-count-design-en]]
+← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇹🇭 ภาษาไทย: [[2026-09-29-stock-count-design]] · 🕘 previous: [[2026-09-28-stock-count-design-en]] · 🆕 ฉบับล่าสุด: [[2026-09-30-stock-count-design-en]]
 
 ## TL;DR
 ณัฑฒ์ (the counter during the pilot) taps **Start** → walks to each back-store shelf and scans its QR → **a UI page pops up inside LINE** showing the products on that shelf, the expected (system) quantity and the last counted quantity → enters the real counts + takes a shelf photo → **a small CV model (Roboflow YOLO) counts from the photo to catch human error** → at the end of the shift taps **Submit** → counts land in Supabase + a summary of mismatches against the system + time taken → a weekly view shows which products move fastest.

@@ -1,13 +1,13 @@
 ---
 tags: [spec, code, avatar-clinic, computer-vision]
 aliases: [Stock Count spec (29/9), spec นับสต็อก (29/9)]
-status: draft
-status_note: "ฉบับ 29/9 เขียนใหม่ตามภาพในหัวของณัฑฒ์ (หน้า UI, minimap, time clock, CV ตรวจยอด) — รอรีวิว"
+status: done
+status_note: "ฉบับเก่า — ใช้ 2026-09-30-stock-count-design แทน"
 created: 2026-09-29
 ---
 # 📦 Spec — ระบบนับสต็อกหลังร้าน (POC · สาขา MBK)
 
-← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇬🇧 English: [[2026-09-29-stock-count-design-en]] · 🕘 ฉบับก่อน: [[2026-09-28-stock-count-design]]
+← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇬🇧 English: [[2026-09-29-stock-count-design-en]] · 🕘 ฉบับก่อน: [[2026-09-28-stock-count-design]] · 🆕 ฉบับล่าสุด: [[2026-09-30-stock-count-design]]
 
 ## TL;DR
 ณัฑฒ์ (คนนับใน pilot) กด **เริ่มนับ** → เดินไปแต่ละชั้นหลังร้าน สแกน QR ที่ชั้น → **หน้า UI ใน LINE เด้งขึ้นมา** บอกว่าชั้นนี้มีสินค้าอะไร ยอดที่ควรมี (expected) และยอดที่นับได้ครั้งก่อน → กรอกยอดจริง + ถ่ายรูปชั้น → **โมเดล CV ตัวเล็ก (Roboflow YOLO) นับจากรูปเพื่อจับความผิดพลาดของคน** → จบกะกด **ส่งยอด** → ยอดเข้า Supabase + สรุปรายการที่ไม่ตรงกับระบบ + เวลาที่ใช้ → รายอาทิตย์ดูว่าสินค้าไหนขายดี
