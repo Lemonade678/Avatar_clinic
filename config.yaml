@@ -1,19 +1,26 @@
-# ระบบนับสต็อกหลังร้าน — ไฟล์นี้แก้เองได้ (commit ขึ้น GitHub ได้ ไม่มีความลับ)
+# ระบบนับสต็อกหลังร้าน — ค่าตั้งเท่านั้น (ไม่มีความลับ · commit ขึ้น GitHub ได้)
 # pilot: หลังร้านสาขามาบุญครอง (ใบนับ 28/9 พิมพ์หัวว่า "สาขาลาดพร้าว" แต่เป็นสต็อกของ MBK)
 branch: mbk
 
-# Basic ID ของ LINE OA (ขึ้นต้นด้วย @) — ดูใน LINE Official Account Manager
-line_basic_id: "@CHANGE-ME"
+# LINE — ดูใน LINE Official Account Manager / LINE Developers
+line_basic_id: "@CHANGE-ME"      # Basic ID ของ LINE OA (ขึ้นต้นด้วย @)
+liff_id: "CHANGE-ME"             # LIFF app ID — ใช้สร้างลิงก์ใน QR
 
-# ว่าง = ใครแชทมาก็นับได้ (ช่วงทดลอง) · ใส่ LINE user ID = จำกัดเฉพาะคนในลิสต์
+# ว่าง = ใครก็เข้าได้ (ช่วงทดลองบนคอม) · pilot: ใส่ LINE user ID ของณัฑฒ์
 allowed_line_user_ids: []
 
-# ผังชั้นหลังร้าน: รหัสชั้น → สินค้าตามลำดับที่ bot จะแสดง
-# ⚠️ ตัวอย่าง 2 ชั้น — ณัฑฒ์ต้องเดินจดผังจริงแล้วแก้ตรงนี้
-shelves:
-  A1:
-    label: "ชั้นเหล็กซ้าย แถว 1"
-    skus: [HB0001, HB0003, HB0004]
-  A2:
-    label: "ชั้นเหล็กซ้าย แถว 2"
-    skus: [NA0025, NA0026]
+# กล้องเริ่มต้นของตัวสแกน QR: back | front (แต่ละเครื่องสลับเองได้ในหน้าสแกน แล้วระบบจำไว้)
+camera_default: back
+
+# ผังตำแหน่งสินค้า (sku → ช่อง L/R ชั้น ตำแหน่ง + ประเภทบรรจุภัณฑ์) — แก้ใน Excel ได้
+layout_file: data/layout_mbk.csv
+
+cv:
+  enabled: true
+  model: "stock-count-packaging/1"   # Roboflow project/version
+  min_confidence: 0.5
+  tolerance_ratio: 0.10               # ธง ⚠️ เมื่อต่างเกิน max(1, 10%)
+  disabled_locations: []              # ช่องที่ของซ้อนเยอะจน CV นับไม่ได้ เช่น [L0301]
+
+photo:
+  min_brightness: 60                  # 0–255 · ต่ำกว่านี้ = รูปมืดเกิน (ห้อง MBK ไฟน้อย)

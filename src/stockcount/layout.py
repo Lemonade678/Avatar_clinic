@@ -11,6 +11,8 @@ from .location import Location, parse_location
 # headers are matched loosely so ณัฑฒ์'s own sheet export ("MBK  directory", "Postion") also loads
 LOCATION_HEADERS = {"location", "mbk directory", "directory"}
 SHELF_HEADERS = {"shelf", "postion"}
+# the classes the small CV model knows; every product is one of these
+PACKAGING = ("bottle", "pouch", "bag", "box", "book")
 
 
 class LayoutError(ValueError):
@@ -53,3 +55,24 @@ def load_layout_csv(path: str | Path) -> list[Placement]:
             except ValueError as e:  # LocationError is a ValueError too
                 raise LayoutError(f"line {line_no}: {e}") from e
     return placements
+
+
+def load_packaging_csv(path: str | Path) -> dict[str, str]:
+    """sku -> packaging class, for every row that has one (placed or not)."""
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        headers = {_normalise(h): h for h in reader.fieldnames or []}
+        sku_col, pack_col = headers.get("sku"), headers.get("packaging")
+        if not sku_col:
+            raise LayoutError("layout CSV needs a 'sku' column")
+        if not pack_col:
+            return {}
+        packaging: dict[str, str] = {}
+        for line_no, rec in enumerate(reader, start=2):
+            value = (rec[pack_col] or "").strip().lower()
+            if not value:
+                continue
+            if value not in PACKAGING:
+                raise LayoutError(f"line {line_no}: packaging '{value}' is not one of {PACKAGING}")
+            packaging[rec[sku_col].strip()] = value
+    return packaging

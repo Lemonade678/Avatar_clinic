@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from stockcount.layout import LayoutError, load_layout_csv
+from stockcount.layout import PACKAGING, LayoutError, load_layout_csv, load_packaging_csv
 
 REPO_LAYOUT = Path(__file__).parents[1] / "data" / "layout_mbk.csv"
 
@@ -58,3 +58,25 @@ def test_repo_layout_file():
     by_code = Counter(p.location.code for p in placements)
     assert by_code["L0301"] == 10
     assert set(by_code) == {"L0101", "L0201", "L0301", "R0101", "R0201", "R0301"}
+
+
+def test_packaging_is_read_for_every_row_placed_or_not(tmp_path):
+    p = write(tmp_path, "sku,location,packaging\nHB0001,R0101,bottle\nHB0007,,POUCH\nHB0003,,\n")
+    assert load_packaging_csv(p) == {"HB0001": "bottle", "HB0007": "pouch"}
+
+
+def test_unknown_packaging_is_rejected(tmp_path):
+    p = write(tmp_path, "sku,location,packaging\nHB0001,R0101,crate\n")
+    with pytest.raises(LayoutError, match="line 2: packaging 'crate'"):
+        load_packaging_csv(p)
+
+
+def test_packaging_column_is_optional(tmp_path):
+    p = write(tmp_path, "sku,location\nHB0001,R0101\n")
+    assert load_packaging_csv(p) == {}
+
+
+def test_repo_layout_has_packaging_for_all_105():
+    packaging = load_packaging_csv(REPO_LAYOUT)
+    assert len(packaging) == 105
+    assert set(packaging.values()) <= set(PACKAGING)
