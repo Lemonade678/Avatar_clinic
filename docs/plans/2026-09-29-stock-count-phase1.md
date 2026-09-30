@@ -11,10 +11,10 @@ created: 2026-09-29
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Back-store staff which is me scan a shelf QR type, counts into a LINE chat bot, and every count (plus an optional shelf photo that send to roboflow yolo model objection to tell how many it is so it just basic computer vision model {it also fact checking human error}) that lands in Supabase per day when shift done around , with a mismatch summary against the system stock. for mbk branch(pilot test) with time clock for checking session start. including digital minimap too like siam paragon minimap of shop aka sku directory. which susceptable for scaling in further
+	**Goal:** Back-store staff which is me scan a shelf QR type, counts into a LINE  chat bot, and every count (plus an optional shelf photo that send to roboflow yolo  model objection to tell how many it is so it just basic computer vision model {it  also fact checking human error}) that lands in Supabase per day when shift done around , with a mismatch summary against the system stock. for mbk branch(pilot test) with time clock for checking session start. including digital minimap too like siam paragon minimap of shop aka sku directory. which susceptable for scaling in further {please include the stock summary each weal}
 
-pilot duration 1 Month for phase 1
-
+	duration : 1 Month for phase 1 of feedback and looping
+ให้เวลา test ระบบ 30 นาทีครับในช่วง protype แต่ goal คือตำกว่า 10 ครับ
 **Architecture:** A FastAPI webhook receives LINE events, verifies the signature, and hands text/images to a pure `StockService` (rules) that talks to a `Repo` interface. `SupabaseRepo` is the real store; `InMemoryRepo` backs the tests. The command `parser`, the reply `messages`, the `config` loader, the CSV loader and QR builder are small, pure modules. The schema lives in `supabase/migrations/` and a GitHub Action pushes it (Supabase free plan). 
 
 **Tech Stack:** Python 3.12 (min 3.11) · FastAPI + uvicorn · line-bot-sdk v3 · supabase-py v2 · PyYAML · qrcode + Pillow ≥10.1 · python-dotenv · tzdata · pytest + httpx · Supabase CLI via `npx` (Node 24 is installed) · ngrok for local HTTPS. time for time counter and sustainable tech for minimap which like left and right side
@@ -39,14 +39,21 @@ pilot duration 1 Month for phase 1
 - Product master = `data/stock_2026-09-28.csv` (105 real SKUs); every foreign key to `products.sku` uses `on update cascade` so a code can be corrected later without breaking history.
 - Photos go to the private Supabase Storage bucket `shelf-photos`.
 - LINE text replies are capped at 5,000 characters.
+add today
+- the time limit is 10 minute cuz if over than that there is no  point of using the system we can use human is easier becuase human bechmark of this job around 10 -20 minute
+- easy to follow UI/UX it need to be simple like 5 click and then system done it job so the whole process might be less under 20 click just want to made mvp version of it
+- include sound recognition system both th and en
 
 ## Review Focus
 
 1. **Thai-keyboard digits** — a staff member types `๗ ๘` instead of `7 8`; it must be read as 7 and 8 (test in Task 3). 
-2. **Counting after midnight** — the server clock is UTC; a count at 01:30 Bangkok on 29/09 must go into the 29/09 session, not 28/09 (test in Task 5).
-3. **CSV re-saved from Excel** — Excel adds a UTF-8 BOM; the loader must still find the `sku` column (test in Task 2).
-4. **LINE reply fails** (expired reply token, redelivered event) — the webhook must still answer 200 so LINE does not retry forever, and the count must already be saved (test in Task 6).
-5. **Correcting a product code after counts exist** — updating `products.sku` must carry through to counts/snapshots/shelf layout instead of failing (migration in Task 8, checked by the smoke script in Task 8).
+2. **Counting after midnight** — the server clock is UTC; a count at 01:30 Bangkok on 29/09 must go into the 29/09 session, not 28/09 (test in Task 5). 
+3. (added)user might translate in type in thai when they forget too change the language the system will automatetically revert to english this could be done like thai <---> english for example  อุระกาวาท 2 ขวด might be v6itdk;km 2 -;f in other case mala 2 package might be ทฟสฟ 2 ยฟแาฟเำ 
+4. **CSV re-saved from Excel** — Excel adds a UTF-8 BOM; the loader must still find the `sku` column (test in Task 2).{add csv vizualiazation of the stock data flow too}
+5. **LINE reply fails** (expired reply token, redelivered event) — the webhook must still answer 200 so LINE does not retry forever, and the count must already be saved (test in Task 6).
+6. **Correcting a product code after counts exist** — updating `products.sku` must carry through to counts/snapshots/shelf layout instead of failing (migration in Task 8, checked by the smoke script in Task 8).
+7. (added)qr code also need to be susceptable for invert mirror since my rear phone camera is broken i only scan using front camera and it is in inverted format and left to right also add to make detect the negative color version also of the picture if the bw is switcing make sure to switch back(this made qr code scanning susceptable to some image distortion)
+8. (added)also the qr code scanning need to open front camera for my phone so it can be setting to use front or back  by default is back but for my version it is front
 
 ## File Map
 
@@ -170,7 +177,7 @@ shelves:
 ```python
 """Back-store stock counting over LINE."""
 ```
-
+{ช่วยแอดของ window ด้วยครับเจ้าของใช่ window}
 `.github/workflows/tests.yml`:
 ```yaml
 name: tests
@@ -364,10 +371,12 @@ Built from the **28/9/2026** sheet, which shows every product code, so there are
 - `src/stockcount/stock_csv.py` — `StockRow(sku, name, category, back_qty, front_qty, system_qty, needs_review)`, `load_stock_csv(path)`, `StockCsvError`; also rejects a row whose `system_qty != back_qty + front_qty` (all 105 rows pass — a check on the transcription)
 - `src/stockcount/seed.py` — `SeedData`, `build_seed(config, rows, as_of)`, `SeedError`
 - Tests: `tests/test_stock_csv.py` (8), `tests/test_seed.py` (3)
+  - updated sku directory with code L/R 0z0y and x postion where z represnt shelf storey y represent the position based on carsisian coordinate and x it just number of shelf in MBK shelf have only one left and rigjt both x is always 1 
 
 ---
 
-### Task 3: Chat command parser
+### Task 3: Chat command parser 
+{updated shelf  ตามนี้เลย  csv task 2 เพิ่มระบบ carsesian coordiantion มา}
 
 **Files:**
 - Create: `src/stockcount/parser.py`
@@ -514,7 +523,7 @@ git commit -m "feat: chat command parser (Thai digits, comma/newline separators)
 **Files:**
 - Create: `src/stockcount/repo.py`
 - Test: `tests/test_repo_memory.py`
-
+{เดี่นวผมสร้าง repo เองครับ}
 **Interfaces:**
 - Consumes: nothing
 - Produces:

@@ -1,8 +1,14 @@
 ---
-tags: [plan, code, avatar-clinic, thai]
-aliases: [แผนนับสต็อกเฟส 1 (ไทย), Stock Count plan TH]
+tags:
+  - plan
+  - code
+  - avatar-clinic
+  - thai
+aliases:
+  - แผนนับสต็อกเฟส 1 (ไทย)
+  - Stock Count plan TH
 status: done
-status_note: "ฉบับเก่า — ใช้ 2026-09-29-stock-count-phase1-th แทน"
+status_note: ฉบับเก่า — ใช้ 2026-09-29-stock-count-phase1-th แทน
 created: 2026-09-29
 ---
 # 🇹🇭 แผนลงมือเฟส 1 — ฉบับภาษาไทย
