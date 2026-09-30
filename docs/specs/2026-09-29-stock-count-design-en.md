@@ -152,6 +152,6 @@ shelves:
 ## ❓ Open questions
 - ❓ The real MBK back-room layout (how many left/right shelves, what goes where) → ณัฑฒ์ walks the room
 - ❓ `packaging` for the 105 SKUs → Claude drafts from category + photos, ณัฑฒ์ checks
-- ❓ The existing sheets say "สาขาลาดพร้าว" (Ladprao) — does the MBK pilot need an MBK sheet as its starting stock, or is it the same stock list
+- ✅ ~~The sheets say "สาขาลาดพร้าว" (Ladprao)~~ → confirmed by ณัฑฒ์ (30/9): this sheet is the **MBK** stock and is the pilot's starting stock · `config.yaml` now has `branch: mbk`
 - ❓ Manager's permission before putting up QR codes · personal or company LINE OA
 - ❓ Host for the 1-month pilot

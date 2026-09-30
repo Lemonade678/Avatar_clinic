@@ -65,5 +65,5 @@ def test_allowlist_blocks_others():
 
 def test_repo_config_yaml_loads():
     cfg = load_config(Path(__file__).parents[1] / "config.yaml")
-    assert cfg.branch == "ladprao"
+    assert cfg.branch == "mbk"
     assert list(cfg.shelves) == ["A1", "A2"]

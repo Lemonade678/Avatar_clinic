@@ -1,5 +1,6 @@
 # ระบบนับสต็อกหลังร้าน — ไฟล์นี้แก้เองได้ (commit ขึ้น GitHub ได้ ไม่มีความลับ)
-branch: ladprao
+# pilot: หลังร้านสาขามาบุญครอง (ใบนับ 28/9 พิมพ์หัวว่า "สาขาลาดพร้าว" แต่เป็นสต็อกของ MBK)
+branch: mbk
 
 # Basic ID ของ LINE OA (ขึ้นต้นด้วย @) — ดูใน LINE Official Account Manager
 line_basic_id: "@CHANGE-ME"
