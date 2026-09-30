@@ -1,8 +1,8 @@
 ---
 tags: [plan, code, avatar-clinic]
 aliases: [Stock Count plan (30/9), แผนนับสต็อกเฟส 1 (30/9)]
-status: active
-status_note: "ฉบับ 30/9 — ตาม spec 30/9 · ณัฑฒ์สั่งให้สร้างเลย (execution: native)"
+status: done
+status_note: "ทำครบ 9 task วันที่ 30/9 · เทสต์ 189 ผ่าน · ขั้นที่ต้องใช้บัญชีจริงอยู่ใน guide"
 created: 2026-09-30
 ---
 # Stock Count Phase 1 — Implementation Plan (30/9)
@@ -34,6 +34,21 @@ created: 2026-09-30
 | run locally without LINE | `$env:APP_ENV="dev"; $env:DEV_USER_ID="U-dev"; .venv\Scripts\uvicorn stockcount.app:build_default_app --factory --reload` | `APP_ENV=dev DEV_USER_ID=U-dev .venv/Scripts/uvicorn stockcount.app:build_default_app --factory --reload` |
 | minimap file | `.venv\Scripts\python scripts\make_minimap.py data\layout_mbk.csv data\stock_2026-09-28.csv` | `.venv/Scripts/python scripts/make_minimap.py data/layout_mbk.csv data/stock_2026-09-28.csv` |
 | QR labels | `.venv\Scripts\python scripts\make_qr.py` | `.venv/Scripts/python scripts/make_qr.py` |
+
+## Status 30/9 — all 9 tasks ✅
+| Task | Result |
+|---|---|
+| 1 Config v2 | ✅ `config.py` (camera, CV, brightness, layout_file) |
+| 2 Layout/seed/migration/import v2 | ✅ `packaging` column, `20260930000000_locations.sql`, import prints 4 tables |
+| 3 Domain rules | ✅ `cv.py` `photo.py` `report.py` `speech.py` `thai_digits.py` |
+| 4 Repo v2 | ✅ `InMemoryRepo.from_files` + `SupabaseRepo` + smoke script |
+| 5 Counting service | ✅ clock, all-or-nothing save, photo+CV, next slot, submit+push, live minimap |
+| 6 Web app | ✅ checked in the browser (dev mode, phone size) |
+| 7 Adapters | ✅ Roboflow + LINE push, fail soft, keys never logged |
+| 8 QR labels | ✅ real label decoded normal / mirrored / inverted / both |
+| 9 Ship it | ✅ Procfile, railway.json, guides, to-dos, session log |
+
+Not verified yet (needs ณัฑฒ์'s accounts): live Supabase, LINE LIFF login, Railway deploy, Roboflow endpoint, camera + speech inside LINE's in-app browser.
 
 ## Done before this plan (✅)
 Scaffold + config loader · CSV loader with sum check · 105-product sheet · schema v1 + db-migrate Action · import script · slot codes + layout loader · keyboard-layout repair · static minimap page.
