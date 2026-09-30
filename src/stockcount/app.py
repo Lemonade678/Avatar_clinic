@@ -264,9 +264,11 @@ def build_default_app() -> FastAPI:
 
     cv_client = None
     if config.cv.enabled and config.cv.model and os.environ.get("ROBOFLOW_API_KEY"):
-        from .roboflow import RoboflowClient
+        from .roboflow import DEFAULT_URL, RoboflowClient
 
-        cv_client = RoboflowClient(config.cv.model, os.environ["ROBOFLOW_API_KEY"])
+        cv_client = RoboflowClient(
+            config.cv.model, os.environ["ROBOFLOW_API_KEY"], base_url=os.environ.get("ROBOFLOW_API_URL", DEFAULT_URL)
+        )
 
     notifier = None
     if os.environ.get("LINE_CHANNEL_ACCESS_TOKEN"):
