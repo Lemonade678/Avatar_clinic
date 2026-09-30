@@ -1,0 +1,8 @@
+# files that run on Linux (Railway, GitHub Actions) must keep LF line endings
+* text=auto
+Procfile text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.sql text eol=lf
+*.yml text eol=lf
+*.js text eol=lf
