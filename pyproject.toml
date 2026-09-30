@@ -17,6 +17,9 @@ dependencies = [
   "python-dotenv>=1.0",
   "tzdata>=2024.1",
   "jinja2>=3.1",
+  "python-multipart>=0.0.9",
+  "itsdangerous>=2.1",
+  "httpx>=0.27",
 ]
 
 [project.optional-dependencies]
@@ -26,7 +29,7 @@ dev = ["pytest>=8", "httpx>=0.27", "pglast>=6"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-stockcount = ["templates/*.html"]
+stockcount = ["templates/*", "static/*", "static/vendor/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block body %}
+<header class="page">
+  <h1>😅 {{ title }}</h1>
+  {% if detail %}<div class="sub">{{ detail }}</div>{% endif %}
+</header>
+<p class="pad-x"><a class="big" href="/map">🗺️ กลับแผนผัง</a></p>
+{% endblock %}

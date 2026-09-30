@@ -1,0 +1,2 @@
+jsQR 1.4.0 (https://github.com/cozmo/jsQR) — Apache License 2.0.
+Vendored so the QR scanner works without loading code from a CDN at runtime.

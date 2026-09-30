@@ -222,3 +222,18 @@ def test_weekly_report():
     svc.save_slot("R0101", "U1", {"A": "5", "B": "9"})
     report = svc.report("2026-W40")
     assert [(m.sku, m.moved) for m in report.top_movers] == [("A", 4)]
+
+
+def test_walk_order_is_left_then_right_top_storey_first():
+    svc, _, _ = make()
+    assert svc.walk_order() == ["L0101", "R0301", "R0101"]
+
+
+def test_next_slot_skips_what_is_done():
+    svc, _, _ = make()
+    assert svc.next_slot() == "L0101"
+    svc.save_slot("L0101", "U1", {"F": "12"})
+    assert svc.next_slot() == "R0301"
+    svc.save_slot("R0301", "U1", {"E": "3"})
+    svc.save_slot("R0101", "U1", {"A": "9", "B": "9"})
+    assert svc.next_slot() is None

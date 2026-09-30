@@ -5,92 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>แผนผังหลังร้าน {{ branch_label }}</title>
 <style>
-  :root {
-    --bg: #f5f6f8; --card: #ffffff; --ink: #1c2230; --muted: #687080; --line: #e1e4ea;
-    --check: #2563eb; --empty: #a0a7b3; --problem: #dc2626; --hit: #fff1c2; --hit-line: #e0a100;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #111418; --card: #1a1f26; --ink: #e7eaef; --muted: #9aa2ae; --line: #2b323c;
-      --check: #7aa6ff; --empty: #6c7482; --problem: #f87171; --hit: #4a3b0f; --hit-line: #e0a100;
-    }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", "Leelawadee UI", sans-serif; }
+{% include "_map.css" %}
   header { padding: 16px 16px 6px; }
   h1 { font-size: 20px; margin: 0 0 2px; }
-  .sub { color: var(--muted); font-size: 12.5px; }
-  .stats { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 16px; }
-  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; font-size: 13px; }
-  .stat b { font-size: 17px; font-variant-numeric: tabular-nums; }
-  .legend { display: flex; gap: 14px; flex-wrap: wrap; padding: 0 16px 6px; font-size: 12.5px; color: var(--muted); }
-  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
-  .search { padding: 6px 16px 4px; position: sticky; top: 0; background: var(--bg); z-index: 1; }
-  .search input { width: 100%; font: inherit; padding: 10px 12px; border-radius: 10px;
-                  border: 1px solid var(--line); background: var(--card); color: var(--ink); }
-  .hint { color: var(--muted); font-size: 12.5px; min-height: 1.3em; margin-top: 3px; }
-  .room { display: grid; grid-template-columns: 1fr 26px 1fr; gap: 8px; padding: 6px 16px 0; }
-  .side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-  .wall h2 { font-size: 13.5px; margin: 0 0 6px; color: var(--muted); font-weight: 600; }
-  .grid { display: grid; gap: 6px; }
-  .aisle { border-left: 2px dashed var(--line); border-right: 2px dashed var(--line);
-           writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center;
-           color: var(--muted); font-size: 12px; letter-spacing: 2px; }
-  .cell { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--line);
-          border-radius: 8px; padding: 6px 7px; min-height: 46px; min-width: 0; }
-  .cell.check { border-left-color: var(--check); }
-  .cell.empty { border-left-color: var(--empty); }
-  .cell.problem { border-left-color: var(--problem); }
-  .cell.free { border-style: dashed; opacity: .55; }
-  .code { font: 600 11.5px ui-monospace, Consolas, monospace; color: var(--muted); }
-  ul { list-style: none; margin: 3px 0 0; padding: 0; }
-  li { display: flex; justify-content: space-between; gap: 6px; font-size: 13px; padding: 2px 4px; border-radius: 5px; }
-  li span:first-child { overflow-wrap: anywhere; }
-  .q { font-variant-numeric: tabular-nums; font-weight: 700; }
-  /* colour each quantity by its own status, never by the cell it sits in */
-  li.check .q { color: var(--check); }
-  li.empty { color: var(--empty); }
-  li.problem .q { color: var(--problem); }
-  .door { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 16px 14px; }
-  .unplaced { padding: 4px 16px 10px; }
-  .unplaced h2 { font-size: 14px; margin: 8px 0 6px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 13px; }
-  .searching [data-search]:not(.hit) { opacity: .28; }
-  .hit { background: var(--hit); outline: 2px solid var(--hit-line); }
   footer { color: var(--muted); font-size: 12px; padding: 4px 16px 28px; }
 </style>
 </head>
 <body>
-{% macro wall_block(wall, many) %}
-  <div class="wall">
-    <h2>{{ "⬅️ ฝั่งซ้าย" if wall.side == "L" else "ฝั่งขวา ➡️" }}{% if many %} · ชั้นวาง {{ wall.shelf }}{% endif %}</h2>
-    {% if not wall.rows %}
-      <div class="cell free"><div class="sub">ยังไม่มีสินค้าที่ใส่ตำแหน่ง</div></div>
-    {% else %}
-      <div class="grid" style="grid-template-columns: repeat({{ wall.rows[0]|length }}, minmax(0, 1fr));">
-        {% for row in wall.rows %}{% for cell in row %}
-          <div class="cell {{ cell.status }}" id="{{ cell.code }}">
-            <div class="code">{{ cell.code }} · ชั้นที่ {{ cell.storey }}</div>
-            {% if cell.items %}
-              <ul>
-                {% for i in cell.items %}
-                  <li class="{{ i.status }}" data-search="{{ (i.name ~ ' ' ~ i.sku)|lower }}" title="{{ i.sku }}">
-                    <span>{{ i.name }}</span><span class="q">{{ i.qty }}</span>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <div class="sub">ว่าง</div>
-            {% endif %}
-          </div>
-        {% endfor %}{% endfor %}
-      </div>
-    {% endif %}
-  </div>
-{% endmacro %}
-
+{% import "_map_macros.html" as ui %}
 <header>
   <h1>🗺️ แผนผังหลังร้าน {{ branch_label }}</h1>
   <div class="sub">ยอด "หน้าร้าน" จากใบนับ {{ as_of }} · สร้างเมื่อ {{ generated_at }}</div>
@@ -101,72 +23,13 @@
   <div class="stat">ต้องเช็ค <b>{{ m.to_check }}</b></div>
   <div class="stat">ต้องเช็คแต่ยังไม่มีตำแหน่ง <b>{{ m.unplaced|length }}</b></div>
 </div>
-
-<div class="legend">
-  <span><i class="dot" style="background: var(--check)"></i>มีของ ต้องเช็ค</span>
-  <span><i class="dot" style="background: var(--empty)"></i>0 = ไม่มีของ ไม่ต้องเช็ค</span>
-  <span><i class="dot" style="background: var(--problem)"></i>ติดลบ = ยอดในระบบผิด</span>
-</div>
-
-<div class="search">
-  <input id="q" type="search" placeholder="ค้นหาชื่อหรือรหัส… (ลืมเปลี่ยนภาษาก็หาเจอ)" autocomplete="off">
-  <div class="hint" id="hint"></div>
-</div>
-
-<div class="room">
-  <section class="side">{% for wall in left %}{{ wall_block(wall, left|length > 1) }}{% endfor %}</section>
-  <div class="aisle">ทางเดิน</div>
-  <section class="side">{% for wall in right %}{{ wall_block(wall, right|length > 1) }}{% endfor %}</section>
-</div>
-<div class="door">🚪 ประตู — มองจากประตูเข้าไปในห้อง</div>
-
-{% if m.unplaced %}
-<section class="unplaced">
-  <h2>📍 ต้องเช็ค แต่ยังไม่มีตำแหน่ง ({{ m.unplaced|length }})</h2>
-  <div class="chips">
-    {% for i in m.unplaced %}
-      <span class="chip" data-search="{{ (i.name ~ ' ' ~ i.sku)|lower }}" title="{{ i.sku }}">{{ i.name }} · {{ i.qty }}</span>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
+{{ ui.legend() }}
+{{ ui.search_box() }}
+{{ ui.room(m, left, right) }}
 
 <footer>ชั้นที่ 1 = ชั้นล่างสุด · ตำแหน่ง 01 = ซ้ายสุดของชั้นวางนั้น · ใส่ตำแหน่งเพิ่มได้ที่ <code>data/layout_mbk.csv</code></footer>
-
 <script>
-  const EN_TO_TH = {{ en_to_th|tojson }};
-  const TH_TO_EN = {{ th_to_en|tojson }};
-  // same rule as stockcount/keyboard.py: convert word by word, never touch plain numbers
-  function convert(text, table, needs) {
-    return text.split(/(\s+)/).map(t =>
-      (/^\d+$/.test(t) || !needs.test(t)) ? t : [...t].map(c => table[c] ?? c).join("")
-    ).join("");
-  }
-  const items = [...document.querySelectorAll("[data-search]")];
-  const input = document.getElementById("q");
-  const hint = document.getElementById("hint");
-  const hits = q => items.filter(el => el.dataset.search.includes(q));
-
-  input.addEventListener("input", () => {
-    const raw = input.value.trim().toLowerCase();
-    items.forEach(el => el.classList.remove("hit"));
-    document.body.classList.toggle("searching", raw.length > 0);
-    hint.textContent = "";
-    if (!raw) return;
-    let found = hits(raw);
-    if (!found.length) {
-      for (const alt of [convert(raw, EN_TO_TH, /[a-z]/), convert(raw, TH_TO_EN, /[฀-๿]/)]) {
-        if (alt !== raw && hits(alt).length) {
-          found = hits(alt);
-          hint.textContent = "ค้นหาเป็น: " + alt;
-          break;
-        }
-      }
-    }
-    found.forEach(el => el.classList.add("hit"));
-    if (found.length) found[0].scrollIntoView({ block: "center", behavior: "smooth" });
-    else hint.textContent = "ไม่พบ";
-  });
+{% include "_search.js" %}
 </script>
 </body>
 </html>

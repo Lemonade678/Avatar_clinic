@@ -146,6 +146,20 @@ class CountingService:
                 slots.setdefault(p.location.code, []).append(p.sku)
         return slots
 
+    def walk_order(self) -> list[str]:
+        """Slots with something to count, in the order the minimap shows them: left then right, top storey first."""
+        slots = self._slots_to_count()
+        locations = {p.location.code: p.location for p in self.repo.placements() if p.location.code in slots}
+        order = sorted(locations.values(), key=lambda l: (l.side, l.shelf, -l.storey, l.position))
+        return [l.code for l in order]
+
+    def next_slot(self) -> str | None:
+        """The first slot in walk order that still has an uncounted product today."""
+        session = self.repo.session_for(self.today())
+        counted = {r.sku for r in self.repo.counts(session.id)} if session else set()
+        slots = self._slots_to_count()
+        return next((code for code in self.walk_order() if not all(s in counted for s in slots[code])), None)
+
     def slot(self, code: str) -> SlotView:
         location = self._location(code)
         products = self.repo.products()

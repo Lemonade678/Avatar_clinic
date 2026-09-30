@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}นับสต็อก {{ branch_label }}{% endblock %}</title>
+<style>
+{% include "_map.css" %}
+</style>
+<link rel="stylesheet" href="/static/app.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+{% if nav is defined and nav %}
+<nav class="topbar">
+  <a href="/map" class="{{ 'on' if nav == 'map' }}">🗺️ แผนผัง</a>
+  <a href="/scan" class="{{ 'on' if nav == 'scan' }}">📷 สแกน</a>
+  <a href="/report" class="{{ 'on' if nav == 'report' }}">📊 รายงาน</a>
+</nav>
+{% endif %}
+{% block body %}{% endblock %}
+</body>
+</html>

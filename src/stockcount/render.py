@@ -20,3 +20,8 @@ def render_minimap(minimap: Minimap, *, branch_label: str, as_of: str, generated
         en_to_th=keyboard.EN_TO_TH,
         th_to_en=keyboard.TH_TO_EN,
     )
+
+
+def render_page(name: str, **context) -> str:
+    """Any app page; the keyboard tables are always available for the search box."""
+    return _env.get_template(name).render(en_to_th=keyboard.EN_TO_TH, th_to_en=keyboard.TH_TO_EN, **context)

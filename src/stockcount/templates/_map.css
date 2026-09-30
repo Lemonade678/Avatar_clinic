@@ -1,0 +1,61 @@
+  :root {
+    --bg: #f5f6f8; --card: #ffffff; --ink: #1c2230; --muted: #687080; --line: #e1e4ea;
+    --check: #2563eb; --empty: #a0a7b3; --problem: #dc2626; --done: #15803d; --diff: #c2410c;
+    --hit: #fff1c2; --hit-line: #e0a100; --accent: #06c755;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111418; --card: #1a1f26; --ink: #e7eaef; --muted: #9aa2ae; --line: #2b323c;
+      --check: #7aa6ff; --empty: #6c7482; --problem: #f87171; --done: #4ade80; --diff: #fb923c;
+      --hit: #4a3b0f; --hit-line: #e0a100;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", "Noto Sans Thai", "Leelawadee UI", sans-serif; }
+  a { color: inherit; }
+  .sub { color: var(--muted); font-size: 12.5px; }
+  .stats { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 16px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; font-size: 13px; }
+  .stat b { font-size: 17px; font-variant-numeric: tabular-nums; }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; padding: 0 16px 6px; font-size: 12.5px; color: var(--muted); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .search { padding: 6px 16px 4px; position: sticky; top: 0; background: var(--bg); z-index: 1; }
+  .search input { width: 100%; font: inherit; padding: 10px 12px; border-radius: 10px;
+                  border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+  .hint { color: var(--muted); font-size: 12.5px; min-height: 1.3em; margin-top: 3px; }
+  .room { display: grid; grid-template-columns: 1fr 26px 1fr; gap: 8px; padding: 6px 16px 0; }
+  .side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .wall h2 { font-size: 13.5px; margin: 0 0 6px; color: var(--muted); font-weight: 600; }
+  .grid { display: grid; gap: 6px; }
+  .aisle { border-left: 2px dashed var(--line); border-right: 2px dashed var(--line);
+           writing-mode: vertical-rl; display: flex; align-items: center; justify-content: center;
+           color: var(--muted); font-size: 12px; letter-spacing: 2px; }
+  .cell { display: block; text-decoration: none; background: var(--card); border: 1px solid var(--line);
+          border-left: 4px solid var(--line); border-radius: 8px; padding: 6px 7px; min-height: 46px; min-width: 0; }
+  a.cell:active { transform: scale(.98); }
+  .cell.check { border-left-color: var(--check); }
+  .cell.done { border-left-color: var(--done); }
+  .cell.diff { border-left-color: var(--diff); }
+  .cell.empty { border-left-color: var(--empty); }
+  .cell.problem { border-left-color: var(--problem); }
+  .cell.free { border-style: dashed; opacity: .55; }
+  .cell.flagged { outline: 2px dashed var(--problem); outline-offset: 1px; }
+  .code { font: 600 11.5px ui-monospace, Consolas, monospace; color: var(--muted); }
+  ul.items { list-style: none; margin: 3px 0 0; padding: 0; }
+  ul.items li { display: flex; justify-content: space-between; gap: 6px; font-size: 13px; padding: 2px 4px; border-radius: 5px; }
+  ul.items li span:first-child { overflow-wrap: anywhere; }
+  .q { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+  /* colour each quantity by its own status, never by the cell it sits in */
+  li.check .q { color: var(--check); }
+  li.done .q { color: var(--done); }
+  li.diff .q { color: var(--diff); }
+  li.empty { color: var(--empty); }
+  li.problem .q { color: var(--problem); }
+  .door { text-align: center; color: var(--muted); font-size: 13px; padding: 8px 16px 14px; }
+  .unplaced { padding: 4px 16px 10px; }
+  .unplaced h2 { font-size: 14px; margin: 8px 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 13px; }
+  .searching [data-search]:not(.hit) { opacity: .28; }
+  .hit { background: var(--hit); outline: 2px solid var(--hit-line); }

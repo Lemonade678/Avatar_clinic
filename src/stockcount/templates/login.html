@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}เข้าสู่ระบบ{% endblock %}
+{% block body %}
+<header class="page">
+  <h1>🔐 เข้าสู่ระบบผ่าน LINE</h1>
+</header>
+<p id="msg" class="pad-x">กำลังตรวจสอบ…</p>
+{% if liff_id and liff_id != "CHANGE-ME" %}
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+  (async () => {
+    const msg = document.getElementById("msg");
+    try {
+      await liff.init({ liffId: {{ liff_id|tojson }} });
+      if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+      // the server asks LINE whether this token is real before trusting the user id inside it
+      const res = await fetch("/auth/liff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_token: liff.getIDToken() }),
+      });
+      if (res.ok) location.replace({{ next|tojson }});
+      else msg.textContent = res.status === 403 ? "บัญชี LINE นี้ยังไม่มีสิทธิ์ใช้ระบบ" : "เข้าสู่ระบบไม่สำเร็จ ลองเปิดใหม่จาก LINE";
+    } catch (e) {
+      msg.textContent = "เปิดผ่านแอป LINE เท่านั้น";
+    }
+  })();
+</script>
+{% else %}
+<script>document.getElementById("msg").textContent = "ยังไม่ได้ตั้งค่า LIFF (liff_id ใน config.yaml) — บนคอมใช้โหมด dev ได้";</script>
+{% endif %}
+{% endblock %}
