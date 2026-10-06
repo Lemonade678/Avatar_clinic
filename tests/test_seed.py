@@ -25,13 +25,13 @@ def test_builds_rows_for_every_table():
     seed = build_seed(
         [row("S1", 3, 4), row("S2")],
         [place("S1", "L0301"), place("S2", "L0301")],
-        {"S1": "plastic_bottle"},
+        {"S1": "jar"},
         DAY,
         CvConfig(disabled_locations=frozenset({"L0301"})),
     )
     assert seed.products == [
-        {"sku": "S1", "name": "name-S1", "category": "cat", "packaging": "plastic_bottle"},
-        {"sku": "S2", "name": "name-S2", "category": "cat", "packaging": None},
+        {"sku": "S1", "name": "name-S1", "category": "cat", "packaging": "jar", "packaging_sub": None},
+        {"sku": "S2", "name": "name-S2", "category": "cat", "packaging": None, "packaging_sub": None},
     ]
     assert seed.locations == [
         {"code": "L0301", "side": "L", "storey": 3, "position": 1, "shelf": 1, "cv_enabled": False}
@@ -65,3 +65,8 @@ def test_repo_data_seeds_cleanly():
     assert len(seed.products) == 105
     assert len(seed.locations) == 6
     assert len(seed.product_locations) == 27
+
+
+def test_subclass_goes_into_the_product_row():
+    seed = build_seed([row("S1")], [], {"S1": "bag"}, DAY, CvConfig(), subclasses={"S1": "medicine_bag"})
+    assert seed.products[0]["packaging_sub"] == "medicine_bag"

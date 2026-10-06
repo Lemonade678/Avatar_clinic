@@ -1,106 +1,106 @@
-sku,name,location,shelf,packaging
-NA0025,ROZY Bag (15g.),,,plastic_bag
-NA0026,CELEB Bag (15g.),,,plastic_bag
-NA0029,ROZY Box (15g. x 30 Sheets),,,box
-NA0030,CELEB Box (15g. x 30 Sheets),,,box
-HB0007,ยาดอง,,,plastic_bag
-HB0008,ยาธาตุ,,,plastic_bag
-HB0028,ลูกประคบ,,,paper_bag
-HB0031,ลักปิด-ลักเปิด,L0301,,paper_bag
-HB0045,มะเร็งปอด(ต้ม),L0301,,paper_bag
-HB0072,มะเร็งลาม(ต้ม),L0301,,paper_bag
-HB0073,มะสุริกา(ต้ม),L0301,,paper_bag
-HB0075,กรามช้าง(ต้ม),L0301,,paper_bag
-HB0082,เบาหวาน(ต้ม),L0301,,paper_bag
-HB0083,ฝีกตะนารายณ์(ต้ม),L0301,,paper_bag
-HB0086,ไตต้ม,L0301,,paper_bag
-HB0104,ล้างปอด(ต้ม),L0301,,paper_bag
-HB0105,ล้างปอด-เสมหะ(ต้ม),L0301,,paper_bag
-HB0098,MALA,,,tin
-HB0116,MALA Madam Blossom,,,tin
-HB0118,MALA Box Set X'mas 2022,,,box
-HB0121,MALA-mini,,,tin
-HB0122,MALA-mini set,,,box
-HB0123,MALA Merry X'mas 20gram,,,tin
-HB0124,MALA Box Set X'mas 2026,,,box
-HB0049,CABA,,,plastic_bottle
-HB0064,น้ำกล้วย,,,plastic_bottle
-HB0090,สเปรย์ฉีดเข่า,,,plastic_bottle
-HB0001,อุระกาวาท,R0101,,plastic_bottle
-HB0003,กัณฑรา,,,plastic_bottle
-HB0004,อโธ,R0101,,plastic_bottle
-HB0005,มัตถะ,,,plastic_bottle
-HB0006,ไตรธาตุ,,,plastic_bottle
-HB0009,ขัดเข่า,,,plastic_bottle
-HB0010,มดลูก,,,plastic_bottle
-HB0011,อังมะ,R0101,,plastic_bottle
-HB0014,มุตา,,,plastic_bottle
-HB0015,ต่อมลูกหมาก,,,plastic_bottle
-HB0016,เตโช,,,plastic_bottle
-HB0017,รากขาว,,,plastic_bottle
-HB0018,ภูมิแพ้ แก้ไอ,,,plastic_bottle
-HB0020,ล้อมตับ ดับพิษ,,,plastic_bottle
-HB0021,เบาหวาน,,,plastic_bottle
-HB0022,หทัยรักษ์,,,plastic_bottle
-HB0032,บรรจบธาตุ,,,plastic_bottle
-HB0033,ล้างมดลูก,,,plastic_bottle
-HB0034,มะสุริกา(ผง),,,plastic_bottle
-HB0035,ปัปผะ,,,plastic_bottle
-HB0037,ฝีในท้อง,,,plastic_bottle
-HB0038,ฝีฟองสมุทร,,,plastic_bottle
-HB0042,ช้ำรั่ว,,,plastic_bottle
-HB0044,มะเร็งปอด(ผง),,,plastic_bottle
-HB0070,กรามช้าง,,,plastic_bottle
-HB0076,ลักปิด-ลักเปิด(กระปุก),,,plastic_bottle
-HB0093,ศิระ,,,plastic_bottle
-HB0094,ดุลยธาตุ,R0201,,plastic_bottle
-HB0101,ริดสีดวง,,,plastic_bottle
-HB0112,ฝีหมอบ (ใหม่),,,plastic_bottle
-HB0114,รากขาว(CV-19),,,plastic_bottle
-HB0013,มหาจักรพรรดิ(เม็ด),L0201,,plastic_bottle
-HB0023,กรดไหลย้อน(เม็ด),L0201,,plastic_bottle
-HB0025,ปัฐพี(เม็ด),,,plastic_bottle
-HB0026,ราชพฤกษ์(เม็ด),,,plastic_bottle
-HB0027,กษัยเส้น(เม็ด),,,plastic_bottle
-HB0030,มหาวัฒนะ(เม็ด),L0101,,plastic_bottle
-HB0043,ตัวหอม(เม็ด),,,plastic_bottle
-HB0046,เตโช(เม็ด),,,plastic_bottle
-HB0047,7 สิง(เม็ด),,,plastic_bottle
-HB0048,อังมะ(เม็ด),,,plastic_bottle
-HB0050,มะเร็งปอด(เม็ด),,,plastic_bottle
-HB0051,ล้อมตับดับพิษ(เม็ด),,,plastic_bottle
-HB0053,ไตรธาตุ(เม็ด),,,plastic_bottle
-HB0054,อโธ(เม็ด),,,plastic_bottle
-HB0055,รุสพิสดาร(เม็ด),,,plastic_bottle
-HB0058,ขัดเข่า(เม็ด),,,plastic_bottle
-HB0059,หทัยรักษ์(เม็ด),,,plastic_bottle
-HB0060,มดลูก(เม็ด),,,plastic_bottle
-HB0061,ภูมิแพ้-แก้ไอ(เม็ด),,,plastic_bottle
-HB0062,ต่อมลูกหมาก(เม็ด),,,plastic_bottle
-HB0066,ช้ำรั่ว(เม็ด),,,plastic_bottle
-HB0071,กรามช้าง(เม็ด),,,plastic_bottle
-HB0074,รากขาว(เม็ด),,,plastic_bottle
-HB0103,ริดสีดวง(เม็ด),,,plastic_bottle
-HB0110,กล่อมนางนอน(เม็ด) ใหม่,L0101,,plastic_bottle
-HB0115,บำรุงเลือด(เม็ด)(สูตรใหม่),L0101,,plastic_bottle
-HB0012,พัทธะ,L0201,,tote_bag
-HB0088,เตโช-ลูกกลอน,R0201,,plastic_bottle
-HB0089,7 สิง(ลูกกลอน),R0201,,plastic_bottle
-HB0091,ลูกแปลกแม่(ลูกกลอน),,,plastic_bottle
-HB0108,ยาหอมสุวรรณ 5ml,,,plastic_bottle
-HB0113,สราญรมย์,R0301,,plastic_bottle
-HB0120,ฝีหมอบ (ลูกกลอน),,,plastic_bottle
-BK0002,หนังสือ รับกำจัดโรค,,,
-BK0006,หนังสือโรคสตรี,,,
-BK0007,หนังสือโรคภูมิแพ้,,,
-BK0008,กินน้อยอยู่นาน (ใหม่),,,
-BK0009,หนังสือโรคกรดไหลย้อน,,,
-BK0010,เบาหวานรักษาได้VL5,,,
-NA0009,เมซโซ,,,box
-NA0016,QUARTO 60Cap,R0301,,plastic_bottle
-NA0017,DUO 60 Cap,,,plastic_bottle
-NA0021,KOVIA,R0301,,plastic_bottle
-NA0027,Touch Up (7 Sheets),,,box
-NA0028,Tidy (7 Sheets),,,box
-NA0031,PANDORA (Egg Shell Membrane),R0301,,plastic_bottle
-NA0032,แพนดอร่าทู (PANDORA II),R0301,,plastic_bottle
+sku,name,location,shelf,packaging,packaging_sub
+NA0025,ROZY Bag (15g.),,,bag,supplement_bag
+NA0026,CELEB Bag (15g.),,,bag,supplement_bag
+NA0029,ROZY Box (15g. x 30 Sheets),,,box,
+NA0030,CELEB Box (15g. x 30 Sheets),,,box,
+HB0007,ยาดอง,,,bag,medicine_bag
+HB0008,ยาธาตุ,,,bag,medicine_bag
+HB0028,ลูกประคบ,,,paper_wrap,
+HB0031,ลักปิด-ลักเปิด,L0301,,paper_wrap,
+HB0045,มะเร็งปอด(ต้ม),L0301,,paper_wrap,
+HB0072,มะเร็งลาม(ต้ม),L0301,,paper_wrap,
+HB0073,มะสุริกา(ต้ม),L0301,,paper_wrap,
+HB0075,กรามช้าง(ต้ม),L0301,,paper_wrap,
+HB0082,เบาหวาน(ต้ม),L0301,,paper_wrap,
+HB0083,ฝีกตะนารายณ์(ต้ม),L0301,,paper_wrap,
+HB0086,ไตต้ม,L0301,,paper_wrap,
+HB0104,ล้างปอด(ต้ม),L0301,,paper_wrap,
+HB0105,ล้างปอด-เสมหะ(ต้ม),L0301,,paper_wrap,
+HB0098,MALA,,,tin,
+HB0116,MALA Madam Blossom,,,tin,
+HB0118,MALA Box Set X'mas 2022,,,box,
+HB0121,MALA-mini,,,tin,
+HB0122,MALA-mini set,,,box,
+HB0123,MALA Merry X'mas 20gram,,,tin,
+HB0124,MALA Box Set X'mas 2026,,,box,
+HB0049,CABA,,,,
+HB0064,น้ำกล้วย,,,,
+HB0090,สเปรย์ฉีดเข่า,,,spray_bottle,
+HB0001,อุระกาวาท,R0101,,jar,
+HB0003,กัณฑรา,,,jar,
+HB0004,อโธ,R0101,,jar,
+HB0005,มัตถะ,,,jar,
+HB0006,ไตรธาตุ,,,jar,
+HB0009,ขัดเข่า,,,jar,
+HB0010,มดลูก,,,jar,
+HB0011,อังมะ,R0101,,jar,
+HB0014,มุตา,,,jar,
+HB0015,ต่อมลูกหมาก,,,jar,
+HB0016,เตโช,,,jar,
+HB0017,รากขาว,,,jar,
+HB0018,ภูมิแพ้ แก้ไอ,,,jar,
+HB0020,ล้อมตับ ดับพิษ,,,jar,
+HB0021,เบาหวาน,,,jar,
+HB0022,หทัยรักษ์,,,jar,
+HB0032,บรรจบธาตุ,,,jar,
+HB0033,ล้างมดลูก,,,jar,
+HB0034,มะสุริกา(ผง),,,jar,
+HB0035,ปัปผะ,,,jar,
+HB0037,ฝีในท้อง,,,jar,
+HB0038,ฝีฟองสมุทร,,,jar,
+HB0042,ช้ำรั่ว,,,jar,
+HB0044,มะเร็งปอด(ผง),,,jar,
+HB0070,กรามช้าง,,,jar,
+HB0076,ลักปิด-ลักเปิด(กระปุก),,,jar,
+HB0093,ศิระ,,,jar,
+HB0094,ดุลยธาตุ,R0201,,jar,
+HB0101,ริดสีดวง,,,jar,
+HB0112,ฝีหมอบ (ใหม่),,,jar,
+HB0114,รากขาว(CV-19),,,jar,
+HB0013,มหาจักรพรรดิ(เม็ด),L0201,,jar,
+HB0023,กรดไหลย้อน(เม็ด),L0201,,jar,
+HB0025,ปัฐพี(เม็ด),,,jar,
+HB0026,ราชพฤกษ์(เม็ด),,,jar,
+HB0027,กษัยเส้น(เม็ด),,,jar,
+HB0030,มหาวัฒนะ(เม็ด),L0101,,jar,
+HB0043,ตัวหอม(เม็ด),,,jar,
+HB0046,เตโช(เม็ด),,,jar,
+HB0047,7 สิง(เม็ด),,,jar,
+HB0048,อังมะ(เม็ด),,,jar,
+HB0050,มะเร็งปอด(เม็ด),,,jar,
+HB0051,ล้อมตับดับพิษ(เม็ด),,,jar,
+HB0053,ไตรธาตุ(เม็ด),,,jar,
+HB0054,อโธ(เม็ด),,,jar,
+HB0055,รุสพิสดาร(เม็ด),,,jar,
+HB0058,ขัดเข่า(เม็ด),,,jar,
+HB0059,หทัยรักษ์(เม็ด),,,jar,
+HB0060,มดลูก(เม็ด),,,jar,
+HB0061,ภูมิแพ้-แก้ไอ(เม็ด),,,jar,
+HB0062,ต่อมลูกหมาก(เม็ด),,,jar,
+HB0066,ช้ำรั่ว(เม็ด),,,jar,
+HB0071,กรามช้าง(เม็ด),,,jar,
+HB0074,รากขาว(เม็ด),,,jar,
+HB0103,ริดสีดวง(เม็ด),,,jar,
+HB0110,กล่อมนางนอน(เม็ด) ใหม่,L0101,,jar,
+HB0115,บำรุงเลือด(เม็ด)(สูตรใหม่),L0101,,jar,
+HB0012,พัทธะ,L0201,,tote_bag,
+HB0088,เตโช-ลูกกลอน,R0201,,jar,
+HB0089,7 สิง(ลูกกลอน),R0201,,jar,
+HB0091,ลูกแปลกแม่(ลูกกลอน),,,jar,
+HB0108,ยาหอมสุวรรณ 5ml,,,jar,
+HB0113,สราญรมย์,R0301,,jar,
+HB0120,ฝีหมอบ (ลูกกลอน),,,jar,
+BK0002,หนังสือ รับกำจัดโรค,,,book,
+BK0006,หนังสือโรคสตรี,,,book,
+BK0007,หนังสือโรคภูมิแพ้,,,book,
+BK0008,กินน้อยอยู่นาน (ใหม่),,,book,
+BK0009,หนังสือโรคกรดไหลย้อน,,,book,
+BK0010,เบาหวานรักษาได้VL5,,,book,
+NA0009,เมซโซ,,,box,
+NA0016,QUARTO 60Cap,R0301,,jar,
+NA0017,DUO 60 Cap,,,jar,
+NA0021,KOVIA,R0301,,jar,
+NA0027,Touch Up (7 Sheets),,,box,
+NA0028,Tidy (7 Sheets),,,box,
+NA0031,PANDORA (Egg Shell Membrane),R0301,,jar,
+NA0032,แพนดอร่าทู (PANDORA II),R0301,,jar,

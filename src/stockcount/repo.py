@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Protocol
 
 from .cv import CvCheck
-from .layout import Placement, load_layout_csv, load_packaging_csv
+from .layout import Placement, load_layout_csv, load_packaging_csv, load_packaging_subclasses
 from .location import parse_location
 from .report import CountRecord, SessionInfo
 from .stock_csv import load_stock_csv
@@ -21,6 +21,7 @@ class Product:
     name: str
     category: str
     packaging: str | None
+    packaging_sub: str | None = None
 
 
 @dataclass(frozen=True)
@@ -93,8 +94,11 @@ class InMemoryRepo:
     def from_files(cls, stock_csv: str | Path, layout_csv: str | Path, as_of: date) -> "InMemoryRepo":
         rows = load_stock_csv(stock_csv)
         packaging = load_packaging_csv(layout_csv)
+        subclasses = load_packaging_subclasses(layout_csv)
         return cls(
-            products={r.sku: Product(r.sku, r.name, r.category, packaging.get(r.sku)) for r in rows},
+            products={
+                r.sku: Product(r.sku, r.name, r.category, packaging.get(r.sku), subclasses.get(r.sku)) for r in rows
+            },
             placements=load_layout_csv(layout_csv),
             stock_as_of=as_of,
             front_qty={r.sku: r.front_qty for r in rows},
@@ -184,8 +188,10 @@ class SupabaseRepo:
         return query.execute().data or []
 
     def products(self) -> dict[str, Product]:
-        rows = self._rows(self.db.table("products").select("sku,name,category,packaging"))
-        return {r["sku"]: Product(r["sku"], r["name"], r["category"], r["packaging"]) for r in rows}
+        rows = self._rows(self.db.table("products").select("sku,name,category,packaging,packaging_sub"))
+        return {
+            r["sku"]: Product(r["sku"], r["name"], r["category"], r["packaging"], r.get("packaging_sub")) for r in rows
+        }
 
     def placements(self) -> list[Placement]:
         locations = {r["code"]: r for r in self._rows(self.db.table("locations").select("code,shelf"))}

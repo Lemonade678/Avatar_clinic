@@ -29,3 +29,16 @@ def test_database_packaging_classes_match_the_code():
     ]
     assert checks, "no packaging CHECK found"
     assert tuple(re.findall(r"'([a-z_]+)'", checks[-1])) == PACKAGING
+
+
+def test_database_bag_subclasses_match_the_code():
+    import re
+
+    from stockcount.layout import SUBCLASSES
+
+    checks = [
+        m.group(1)
+        for p in MIGRATIONS
+        for m in re.finditer(r"packaging_sub in \(([^)]*)\)", p.read_text(encoding="utf-8"))
+    ]
+    assert checks and tuple(re.findall(r"'([a-z_]+)'", checks[-1])) == SUBCLASSES["bag"]

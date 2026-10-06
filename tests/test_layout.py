@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from stockcount.layout import PACKAGING, LayoutError, load_layout_csv, load_packaging_csv
+from stockcount.layout import PACKAGING, SUBCLASSES, LayoutError, load_layout_csv, load_packaging_csv, load_packaging_subclasses
 
 REPO_LAYOUT = Path(__file__).parents[1] / "data" / "layout_mbk.csv"
 
@@ -61,8 +61,8 @@ def test_repo_layout_file():
 
 
 def test_packaging_is_read_for_every_row_placed_or_not(tmp_path):
-    p = write(tmp_path, "sku,location,packaging\nHB0001,R0101,plastic_bottle\nHB0007,,PLASTIC_BAG\nHB0003,,\n")
-    assert load_packaging_csv(p) == {"HB0001": "plastic_bottle", "HB0007": "plastic_bag"}
+    p = write(tmp_path, "sku,location,packaging\nHB0001,R0101,jar\nHB0007,,BAG\nHB0003,,\n")
+    assert load_packaging_csv(p) == {"HB0001": "jar", "HB0007": "bag"}
 
 
 def test_unknown_packaging_is_rejected(tmp_path):
@@ -76,13 +76,26 @@ def test_packaging_column_is_optional(tmp_path):
     assert load_packaging_csv(p) == {}
 
 
-def test_packaging_classes_are_the_six_objects_from_the_shop():
-    # ณัฑฒ์ 6/10: paper medicine bag, plastic medicine bag, plastic bottle, box, tote bag, inhaler tin
-    assert PACKAGING == ("paper_bag", "plastic_bag", "plastic_bottle", "box", "tote_bag", "tin")
+def test_packaging_classes_are_the_objects_on_the_shelves():
+    # ณัฑฒ์ 6/10 (round 3): book, jar (glass or plastic), paper wrap (boiled herbs), bag, spray bottle,
+    # plus box, tote bag and inhaler tin from round 2
+    assert PACKAGING == ("book", "jar", "paper_wrap", "bag", "spray_bottle", "box", "tote_bag", "tin")
+    # blue medicine bags and supplement bags are kinds of bag, not separate classes
+    assert SUBCLASSES == {"bag": ("medicine_bag", "supplement_bag")}
 
 
-def test_repo_layout_has_packaging_for_everything_but_books():
+def test_subclasses_are_read_and_must_belong_to_their_class(tmp_path):
+    p = write(tmp_path, "sku,packaging,packaging_sub\nHB0007,bag,medicine_bag\nNA0025,bag,\nHB0001,jar,\n")
+    assert load_packaging_subclasses(p) == {"HB0007": "medicine_bag"}
+    bad = write(tmp_path, "sku,packaging,packaging_sub\nHB0001,jar,medicine_bag\n")
+    with pytest.raises(LayoutError, match="line 2: subclass 'medicine_bag' does not belong to 'jar'"):
+        load_packaging_subclasses(bad)
+
+
+def test_repo_layout_classes_cover_the_products_that_need_checking():
     packaging = load_packaging_csv(REPO_LAYOUT)
     assert set(packaging.values()) <= set(PACKAGING)
-    assert len(packaging) == 99  # the 6 books (BK…) have no CV class yet
-    assert not any(sku.startswith("BK") for sku in packaging)
+    assert packaging["BK0006"] == "book" and packaging["HB0090"] == "spray_bottle"
+    assert packaging["HB0028"] == "paper_wrap" and packaging["HB0001"] == "jar"
+    assert load_packaging_subclasses(REPO_LAYOUT)["HB0007"] == "medicine_bag"
+    assert load_packaging_subclasses(REPO_LAYOUT)["NA0025"] == "supplement_bag"

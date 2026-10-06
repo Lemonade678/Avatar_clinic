@@ -11,9 +11,11 @@ from .location import Location, parse_location
 # headers are matched loosely so ณัฑฒ์'s own sheet export ("MBK  directory", "Postion") also loads
 LOCATION_HEADERS = {"location", "mbk directory", "directory"}
 SHELF_HEADERS = {"shelf", "postion"}
-# what the small CV model can see on a shelf (ณัฑฒ์, 6/10): paper medicine bag, plastic medicine bag,
-# plastic bottle, box, tote bag, inhaler tin — a product with no class is simply not cross-checked
-PACKAGING = ("paper_bag", "plastic_bag", "plastic_bottle", "box", "tote_bag", "tin")
+# what the small CV model can see on a shelf (ณัฑฒ์, 6/10): book, jar (glass or plastic), paper wrap
+# (boiled herbs), bag, spray bottle, box, tote bag, inhaler tin — a product with no class is not cross-checked
+PACKAGING = ("book", "jar", "paper_wrap", "bag", "spray_bottle", "box", "tote_bag", "tin")
+# finer kinds kept as product data only; the model is trained on the main class
+SUBCLASSES = {"bag": ("medicine_bag", "supplement_bag")}
 
 
 class LayoutError(ValueError):
@@ -77,3 +79,25 @@ def load_packaging_csv(path: str | Path) -> dict[str, str]:
                 raise LayoutError(f"line {line_no}: packaging '{value}' is not one of {PACKAGING}")
             packaging[rec[sku_col].strip()] = value
     return packaging
+
+
+def load_packaging_subclasses(path: str | Path) -> dict[str, str]:
+    """sku -> subclass (e.g. a blue medicine bag is a "bag" of kind "medicine_bag")."""
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        headers = {_normalise(h): h for h in reader.fieldnames or []}
+        sku_col, pack_col, sub_col = headers.get("sku"), headers.get("packaging"), headers.get("packaging_sub")
+        if not sku_col:
+            raise LayoutError("layout CSV needs a 'sku' column")
+        if not sub_col:
+            return {}
+        subclasses: dict[str, str] = {}
+        for line_no, rec in enumerate(reader, start=2):
+            kind = (rec[sub_col] or "").strip().lower()
+            if not kind:
+                continue
+            cls = (rec[pack_col] or "").strip().lower() if pack_col else ""
+            if kind not in SUBCLASSES.get(cls, ()):
+                raise LayoutError(f"line {line_no}: subclass '{kind}' does not belong to '{cls}'")
+            subclasses[rec[sku_col].strip()] = kind
+    return subclasses

@@ -22,8 +22,8 @@ from .service import CountError, CountingService, SessionClosed, SlotNotFound
 
 STATIC_DIR = Path(__file__).parent / "static"
 PACKAGING_TH = {
-    "paper_bag": "ถุงยากระดาษ", "plastic_bag": "ถุงยาพลาสติก", "plastic_bottle": "ขวดยาพลาสติก",
-    "box": "กล่อง", "tote_bag": "ถุงผ้า (tote bag)", "tin": "กระป๋องยาดม",
+    "book": "หนังสือ (เล่ม)", "jar": "กระปุก", "paper_wrap": "ห่อกระดาษ", "bag": "ถุง",
+    "spray_bottle": "ขวดสเปรย์", "box": "กล่อง", "tote_bag": "ถุงผ้า (tote bag)", "tin": "กระป๋องยาดม",
 }
 
 log = logging.getLogger(__name__)

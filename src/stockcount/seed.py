@@ -27,12 +27,14 @@ def build_seed(
     packaging: dict[str, str],
     as_of: date,
     cv: CvConfig,
+    subclasses: dict[str, str] | None = None,
 ) -> SeedData:
+    subclasses = subclasses or {}
     known = {r.sku for r in rows}
     missing = sorted({p.sku for p in placements} - known)
     if missing:
         raise SeedError(f"skus in the layout but not in the stock sheet: {missing}")
-    ghosts = sorted(set(packaging) - known)
+    ghosts = sorted((set(packaging) | set(subclasses)) - known)
     if ghosts:
         raise SeedError(f"packaging given for skus not in the stock sheet: {ghosts}")
 
@@ -53,7 +55,14 @@ def build_seed(
 
     return SeedData(
         products=[
-            {"sku": r.sku, "name": r.name, "category": r.category, "packaging": packaging.get(r.sku)} for r in rows
+            {
+                "sku": r.sku,
+                "name": r.name,
+                "category": r.category,
+                "packaging": packaging.get(r.sku),
+                "packaging_sub": subclasses.get(r.sku),
+            }
+            for r in rows
         ],
         locations=sorted(locations.values(), key=lambda d: (d["side"], d["shelf"], d["storey"], d["position"])),
         product_locations=[{"sku": p.sku, "location_code": p.location.code} for p in placements],

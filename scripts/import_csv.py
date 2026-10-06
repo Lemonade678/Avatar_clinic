@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 from stockcount.config import load_config
-from stockcount.layout import load_layout_csv, load_packaging_csv
+from stockcount.layout import load_layout_csv, load_packaging_csv, load_packaging_subclasses
 from stockcount.seed import build_seed
 from stockcount.stock_csv import load_stock_csv
 
@@ -27,6 +27,7 @@ def main(argv: list[str]) -> None:
         load_packaging_csv(cfg.layout_file),
         date.fromisoformat(argv[2]),
         cfg.cv,
+        subclasses=load_packaging_subclasses(cfg.layout_file),
     )
     db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_KEY"])
 
