@@ -1,13 +1,13 @@
 ---
 tags: [spec, code, avatar-clinic, computer-vision, english]
 aliases: [Stock Count spec (EN, 30/9), Stock Count design English (30/9)]
-status: draft
-status_note: "English companion of the 30/9 Thai spec — the Thai file is the source of truth if they ever differ"
+status: done
+status_note: "ฉบับเก่า — ใช้ 2026-10-06-stock-count-design-en แทน"
 created: 2026-09-30
 ---
 # 📦 Spec — Back-store stock counting (POC · MBK branch)
 
-← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇹🇭 ภาษาไทย: [[2026-09-30-stock-count-design]] · 🕘 previous: [[2026-09-29-stock-count-design-en]]
+← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇹🇭 ภาษาไทย: [[2026-09-30-stock-count-design]] · 🕘 previous: [[2026-09-29-stock-count-design-en]] · 🆕 ฉบับล่าสุด: [[2026-10-06-stock-count-design-en]]
 
 > The starting idea is inspired by **Fling Asia (Fling.AI)** — ณัฑฒ์'s former workplace — and extended to fit a small retail back store.
 
@@ -170,7 +170,7 @@ flowchart LR
 ## Where it runs
 - Dev: ณัฑฒ์'s Windows machine + ngrok (LIFF needs HTTPS)
 - Pilot: **Railway** (Singapore region) ⚠️ current pricing not checked yet — must fit the budget
-- Repo: ณัฑฒ์ creates the GitHub repo (private) himself
+- Repo: ณัฑฒ์ creates the private GitHub repo
 
 ## ✅ Answered
 - Branch = MBK (the 28/9 sheet is the MBK stock) · permission to put up QR codes: **not needed** · LINE OA: **ณัฑฒ์'s own account** · deploy: **Railway** · data: **≤ 5 countries** (Singapore is fine)

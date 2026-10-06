@@ -1,13 +1,13 @@
 ---
 tags: [spec, code, avatar-clinic, computer-vision]
 aliases: [Stock Count spec (30/9), spec นับสต็อก (30/9)]
-status: draft
-status_note: "ฉบับ 30/9 — รวมคอมเมนต์ {} / (added) / เพิ่มมา ของณัฑฒ์ทั้งหมด · มีคำถามค้างท้ายไฟล์"
+status: done
+status_note: "ฉบับเก่า — ใช้ 2026-10-06-stock-count-design แทน"
 created: 2026-09-30
 ---
 # 📦 Spec — ระบบนับสต็อกหลังร้าน (POC · สาขา MBK)
 
-← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇬🇧 English: [[2026-09-30-stock-count-design-en]] · 🕘 ฉบับก่อน: [[2026-09-29-stock-count-design]]
+← [[Project - Stock Count]] · [[Code Hub - Avatar]] · 🇬🇧 English: [[2026-09-30-stock-count-design-en]] · 🕘 ฉบับก่อน: [[2026-09-29-stock-count-design]] · 🆕 ฉบับล่าสุด: [[2026-10-06-stock-count-design]]
 
 > ไอเดียตั้งต้นได้แรงบันดาลใจจากระบบของ **Fling Asia (Fling.AI)** — ที่ทำงานเก่าของณัฑฒ์ — แล้วต่อยอดให้เหมาะกับร้านค้าปลีกขนาดเล็ก
 
