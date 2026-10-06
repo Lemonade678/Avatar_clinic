@@ -15,7 +15,7 @@ def write(tmp_path, text):
 
 
 def test_reads_placed_rows_and_skips_blanks(tmp_path):
-    p = write(tmp_path, "sku,name,location,shelf\nHB0001,อุระกาวาท,R0101,\nHB0003,กัณฑรา,,\n")
+    p = write(tmp_path, "sku,name,location\nHB0001,อุระกาวาท,R0101\nHB0003,กัณฑรา,\n")
     [placement] = load_layout_csv(p)
     assert placement.sku == "HB0001"
     assert placement.location.code == "R0101"
@@ -23,10 +23,16 @@ def test_reads_placed_rows_and_skips_blanks(tmp_path):
 
 
 def test_reads_the_original_sheet_headers(tmp_path):
-    # ณัฑฒ์'s own export: "MBK  directory" (two spaces) and "Postion" (= shelf number x)
-    p = write(tmp_path, "sku,name,MBK  directory,Postion\nHB0001,x,l0301,2\n")
+    # ณัฑฒ์'s own export: "MBK  directory" (two spaces) plus an unused "Postion" column
+    p = write(tmp_path, "sku,name,MBK  directory,Postion\nHB0001,x,l0301,\n")
     [placement] = load_layout_csv(p)
-    assert (placement.location.code, placement.location.shelf) == ("L0301", 2)
+    assert placement.location.code == "L0301"
+
+
+def test_shelf_comes_from_the_last_two_digits_of_the_code(tmp_path):
+    # ณัฑฒ์ 6/10 (round 4): L0302 = left, storey 3, shelf 02 — a "Postion" value cannot override it
+    p = write(tmp_path, "sku,MBK  directory,Postion\nHB0001,L0302,\nHB0003,R0101,7\n")
+    assert [(p.location.code, p.location.shelf) for p in load_layout_csv(p)] == [("L0302", 2), ("R0101", 1)]
 
 
 def test_excel_bom_is_ignored(tmp_path):
@@ -78,8 +84,8 @@ def test_packaging_column_is_optional(tmp_path):
 
 def test_packaging_classes_are_the_objects_on_the_shelves():
     # ณัฑฒ์ 6/10 (round 3): book, jar (glass or plastic), paper wrap (boiled herbs), bag, spray bottle,
-    # plus box, tote bag and inhaler tin from round 2
-    assert PACKAGING == ("book", "jar", "paper_wrap", "bag", "spray_bottle", "box", "tote_bag", "tin")
+    # plus box, tote bag and inhaler tin from round 2; round 4: CABA and banana juice are plain bottles
+    assert PACKAGING == ("book", "jar", "paper_wrap", "bag", "bottle", "spray_bottle", "box", "tote_bag", "tin")
     # blue medicine bags and supplement bags are kinds of bag, not separate classes
     assert SUBCLASSES == {"bag": ("medicine_bag", "supplement_bag")}
 
@@ -97,5 +103,6 @@ def test_repo_layout_classes_cover_the_products_that_need_checking():
     assert set(packaging.values()) <= set(PACKAGING)
     assert packaging["BK0006"] == "book" and packaging["HB0090"] == "spray_bottle"
     assert packaging["HB0028"] == "paper_wrap" and packaging["HB0001"] == "jar"
+    assert packaging["HB0049"] == "bottle" and packaging["HB0064"] == "bottle"  # CABA, banana juice
     assert load_packaging_subclasses(REPO_LAYOUT)["HB0007"] == "medicine_bag"
     assert load_packaging_subclasses(REPO_LAYOUT)["NA0025"] == "supplement_bag"

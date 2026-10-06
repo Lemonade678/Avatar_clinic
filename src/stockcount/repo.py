@@ -194,12 +194,8 @@ class SupabaseRepo:
         }
 
     def placements(self) -> list[Placement]:
-        locations = {r["code"]: r for r in self._rows(self.db.table("locations").select("code,shelf"))}
         links = self._rows(self.db.table("product_locations").select("sku,location_code"))
-        return [
-            Placement(l["sku"], parse_location(l["location_code"], locations[l["location_code"]]["shelf"]))
-            for l in links
-        ]
+        return [Placement(l["sku"], parse_location(l["location_code"])) for l in links]
 
     def stock(self) -> tuple[date | None, dict[str, int]]:
         rows = self._rows(self.db.table("stock_snapshots").select("sku,front_qty,as_of").order("as_of", desc=True))

@@ -37,4 +37,6 @@ def test_keyboard_tables_are_embedded_for_search():
 def test_map_explains_how_to_read_a_slot_code():
     # ณัฑฒ์ forgot the code after a 4-day break — the page should remind instead of memory
     html = page()
-    assert "อ่านรหัสช่อง" in html and "นับจากล่าง" in html and "นับจากซ้าย" in html
+    assert "อ่านรหัสช่อง" in html and "นับจากล่าง" in html
+    # 6/10 round 4: the last two digits are the shelf unit, not a position from the left
+    assert "ชั้นวาง" in html and "นับจากซ้าย" not in html

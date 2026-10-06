@@ -1,6 +1,6 @@
 """Build the back-room minimap (the sku directory as a floor plan). Pure: no I/O.
 
-Each wall is drawn as seen from the door: storeys top to bottom, positions left to right.
+Each wall is one shelf unit drawn as seen from the door, storeys top to bottom (one slot per storey).
 Status comes from the stock sheet quantity: > 0 must be checked, 0 = not stocked (skip),
 < 0 = the system record itself is wrong. Once counted today: "done" (matches) or "diff".
 """
@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from .layout import Placement
+from .location import Location
 from .stock_csv import StockRow
 
 STATUS_ORDER = ("problem", "diff", "check", "done", "empty", "free")  # worst first
@@ -28,7 +29,6 @@ class MapItem:
 class MapCell:
     code: str
     storey: int
-    position: int
     items: tuple[MapItem, ...]
     flagged: bool = False  # the CV cross-check disagreed with today's counts
 
@@ -43,7 +43,7 @@ class MapCell:
 class MapWall:
     side: str
     shelf: int
-    rows: tuple[tuple[MapCell, ...], ...]  # top storey first; positions left to right
+    cells: tuple[MapCell, ...]  # one per storey, top storey first
 
 
 @dataclass(frozen=True)
@@ -63,17 +63,15 @@ def item_status(qty: int) -> str:
 
 def _wall(side: str, shelf: int, here: list[Placement], item_of) -> MapWall:
     top = max((p.location.storey for p in here), default=0)
-    width = max((p.location.position for p in here), default=0)
-    rows = []
-    for storey in range(top, 0, -1):
-        cells = []
-        for position in range(1, width + 1):
-            items = tuple(
-                item_of(p.sku) for p in here if (p.location.storey, p.location.position) == (storey, position)
-            )
-            cells.append(MapCell(f"{side}{storey:02d}{position:02d}", storey, position, items))
-        rows.append(tuple(cells))
-    return MapWall(side, shelf, tuple(rows))
+    cells = tuple(
+        MapCell(
+            Location(side, storey, shelf).code,
+            storey,
+            tuple(item_of(p.sku) for p in here if p.location.storey == storey),
+        )
+        for storey in range(top, 0, -1)
+    )
+    return MapWall(side, shelf, cells)
 
 
 def build_minimap(placements: list[Placement], rows: list[StockRow], qty_field: str = "front_qty") -> Minimap:
@@ -117,10 +115,7 @@ def apply_progress(minimap: Minimap, counted: dict[str, int], flagged: set[str])
     walls = tuple(
         replace(
             wall,
-            rows=tuple(
-                tuple(replace(c, items=tuple(item(i) for i in c.items), flagged=c.code in flagged) for c in row)
-                for row in wall.rows
-            ),
+            cells=tuple(replace(c, items=tuple(item(i) for i in c.items), flagged=c.code in flagged) for c in wall.cells),
         )
         for wall in minimap.walls
     )

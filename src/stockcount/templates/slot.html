@@ -4,7 +4,7 @@
 <header class="page">
   <a href="/map" class="back">← แผนผัง</a>
   <h1>ช่อง {{ view.code }}</h1>
-  <div class="sub">{{ "ฝั่งซ้าย" if view.location.side == "L" else "ฝั่งขวา" }} · ชั้นที่ {{ view.location.storey }} · ตำแหน่ง {{ view.location.position }}{% if view.location.shelf > 1 %} · ชั้นวาง {{ view.location.shelf }}{% endif %}</div>
+  <div class="sub">{{ "ฝั่งซ้าย" if view.location.side == "L" else "ฝั่งขวา" }} · ชั้นที่ {{ view.location.storey }} · ชั้นวาง {{ "%02d"|format(view.location.shelf) }}</div>
 </header>
 
 {% if flash %}<div class="pad-x">{% include "_flash.html" %}</div>{% endif %}

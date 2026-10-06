@@ -19,7 +19,7 @@ def main() -> None:
     db = repo.db
     now = datetime.now(timezone.utc)
     db.table("products").upsert({"sku": "SMOKE-1", "name": "smoke", "category": "test", "packaging": "jar"}).execute()
-    db.table("locations").upsert({"code": "R9999", "side": "R", "storey": 99, "position": 99}).execute()
+    db.table("locations").upsert({"code": "R9999", "side": "R", "storey": 99, "shelf": 99}).execute()
     db.table("product_locations").upsert({"sku": "SMOKE-1", "location_code": "R9999"}).execute()
     db.table("stock_snapshots").upsert({"sku": "SMOKE-1", "back_qty": 0, "front_qty": 4, "as_of": DAY.isoformat()}).execute()
     path = None

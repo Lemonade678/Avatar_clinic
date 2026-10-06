@@ -8,12 +8,13 @@ from pathlib import Path
 
 from .location import Location, parse_location
 
-# headers are matched loosely so ณัฑฒ์'s own sheet export ("MBK  directory", "Postion") also loads
+# headers are matched loosely so ณัฑฒ์'s own sheet export ("MBK  directory") also loads; its "Postion"
+# column is not read — the code's last two digits already name the shelf unit (6/10 round 4)
 LOCATION_HEADERS = {"location", "mbk directory", "directory"}
-SHELF_HEADERS = {"shelf", "postion"}
 # what the small CV model can see on a shelf (ณัฑฒ์, 6/10): book, jar (glass or plastic), paper wrap
-# (boiled herbs), bag, spray bottle, box, tote bag, inhaler tin — a product with no class is not cross-checked
-PACKAGING = ("book", "jar", "paper_wrap", "bag", "spray_bottle", "box", "tote_bag", "tin")
+# (boiled herbs), bag, bottle (CABA, banana juice), spray bottle, box, tote bag, inhaler tin
+# — a product with no class is not cross-checked
+PACKAGING = ("book", "jar", "paper_wrap", "bag", "bottle", "spray_bottle", "box", "tote_bag", "tin")
 # finer kinds kept as product data only; the model is trained on the main class
 SUBCLASSES = {"bag": ("medicine_bag", "supplement_bag")}
 
@@ -38,7 +39,6 @@ def load_layout_csv(path: str | Path) -> list[Placement]:
         headers = {_normalise(h): h for h in reader.fieldnames or []}
         sku_col = headers.get("sku")
         loc_col = next((headers[h] for h in headers if h in LOCATION_HEADERS), None)
-        shelf_col = next((headers[h] for h in headers if h in SHELF_HEADERS), None)
         if not sku_col or not loc_col:
             raise LayoutError("layout CSV needs a 'sku' column and a 'location' column")
 
@@ -52,9 +52,8 @@ def load_layout_csv(path: str | Path) -> list[Placement]:
             if sku in seen:
                 raise LayoutError(f"line {line_no}: sku {sku} is placed twice")
             seen.add(sku)
-            shelf_raw = (rec[shelf_col] or "").strip() if shelf_col else ""
             try:
-                placements.append(Placement(sku, parse_location(code, int(shelf_raw) if shelf_raw else 1)))
+                placements.append(Placement(sku, parse_location(code)))
             except ValueError as e:  # LocationError is a ValueError too
                 raise LayoutError(f"line {line_no}: {e}") from e
     return placements

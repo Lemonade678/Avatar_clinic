@@ -1,11 +1,11 @@
-{% macro wall_block(wall, many, link=False) %}
+{% macro wall_block(wall, link=False) %}
   <div class="wall">
-    <h2>{{ "⬅️ ฝั่งซ้าย" if wall.side == "L" else "ฝั่งขวา ➡️" }}{% if many %} · ชั้นวาง {{ wall.shelf }}{% endif %}</h2>
-    {% if not wall.rows %}
+    <h2>{{ "⬅️ ฝั่งซ้าย" if wall.side == "L" else "ฝั่งขวา ➡️" }} · ชั้นวาง {{ "%02d"|format(wall.shelf) }}</h2>
+    {% if not wall.cells %}
       <div class="cell free"><div class="sub">ยังไม่มีสินค้าที่ใส่ตำแหน่ง</div></div>
     {% else %}
-      <div class="grid" style="grid-template-columns: repeat({{ wall.rows[0]|length }}, minmax(0, 1fr));">
-        {% for row in wall.rows %}{% for cell in row %}
+      <div class="grid">
+        {% for cell in wall.cells %}
           {% set clickable = link and cell.status not in ("free", "empty") %}
           <{{ "a" if clickable else "div" }} class="cell {{ cell.status }}{{ ' flagged' if cell.flagged }}" id="{{ cell.code }}"{% if clickable %} href="/loc/{{ cell.code }}"{% endif %}>
             <div class="code">{{ cell.code }} · ชั้นที่ {{ cell.storey }}{{ " ⚠️" if cell.flagged }}</div>
@@ -22,7 +22,7 @@
               <div class="sub">ว่าง</div>
             {% endif %}
           </{{ "a" if clickable else "div" }}>
-        {% endfor %}{% endfor %}
+        {% endfor %}
       </div>
     {% endif %}
   </div>
@@ -30,9 +30,9 @@
 
 {% macro room(m, left, right, link=False) %}
   <div class="room">
-    <section class="side">{% for wall in left %}{{ wall_block(wall, left|length > 1, link) }}{% endfor %}</section>
+    <section class="side">{% for wall in left %}{{ wall_block(wall, link) }}{% endfor %}</section>
     <div class="aisle">ทางเดิน</div>
-    <section class="side">{% for wall in right %}{{ wall_block(wall, right|length > 1, link) }}{% endfor %}</section>
+    <section class="side">{% for wall in right %}{{ wall_block(wall, link) }}{% endfor %}</section>
   </div>
   <div class="door">🚪 ประตู — มองจากประตูเข้าไปในห้อง</div>
   {% if m.unplaced %}
@@ -57,7 +57,7 @@
     <span><i class="dot" style="background: var(--empty)"></i>0 = ไม่มีของ ไม่ต้องเช็ค</span>
     <span><i class="dot" style="background: var(--problem)"></i>ติดลบ = ยอดในระบบผิด</span>
   </div>
-  <div class="legend howto">📖 อ่านรหัสช่อง: <b>L 03 01</b> = ฝั่ง<b>ซ้าย</b> (R = ขวา, มองจากประตู) · <b>ชั้นที่ 3</b> นับจากล่าง · <b>ตำแหน่ง 1</b> นับจากซ้าย</div>
+  <div class="legend howto">📖 อ่านรหัสช่อง: <b>L 03 01</b> = ฝั่ง<b>ซ้าย</b> (R = ขวา, มองจากประตู) · <b>ชั้นที่ 3</b> นับจากล่าง · <b>ชั้นวาง 01</b> = ตู้ชั้นวางตัวที่ 1 ของฝั่งนั้น</div>
 {% endmacro %}
 
 {% macro search_box() %}

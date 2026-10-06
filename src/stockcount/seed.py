@@ -47,7 +47,6 @@ def build_seed(
                 "code": loc.code,
                 "side": loc.side,
                 "storey": loc.storey,
-                "position": loc.position,
                 "shelf": loc.shelf,
                 "cv_enabled": cv.is_enabled_for(loc.code),
             },
@@ -64,7 +63,7 @@ def build_seed(
             }
             for r in rows
         ],
-        locations=sorted(locations.values(), key=lambda d: (d["side"], d["shelf"], d["storey"], d["position"])),
+        locations=sorted(locations.values(), key=lambda d: (d["side"], d["shelf"], d["storey"])),
         product_locations=[{"sku": p.sku, "location_code": p.location.code} for p in placements],
         snapshots=[
             {"sku": r.sku, "back_qty": r.back_qty, "front_qty": r.front_qty, "as_of": as_of.isoformat()} for r in rows

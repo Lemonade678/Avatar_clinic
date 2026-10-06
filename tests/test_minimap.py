@@ -14,8 +14,8 @@ def row(sku, front, back=0):
     return StockRow(sku, f"name-{sku}", "cat", back, front, back + front, False)
 
 
-def place(sku, code, shelf=1):
-    return Placement(sku, parse_location(code, shelf))
+def place(sku, code):
+    return Placement(sku, parse_location(code))
 
 
 def test_item_status_follows_the_front_qty_rule():
@@ -23,34 +23,33 @@ def test_item_status_follows_the_front_qty_rule():
     assert [item_status(q) for q in (3, 0, -9)] == ["check", "empty", "problem"]
 
 
-def test_wall_rows_are_top_storey_first_and_gaps_are_filled():
+def test_wall_cells_are_top_storey_first_and_gaps_are_filled():
     m = build_minimap([place("A", "L0101"), place("B", "L0301")], [row("A", 2), row("B", 0)])
     left = m.walls[0]
     assert left.side == "L"
-    assert [r[0].code for r in left.rows] == ["L0301", "L0201", "L0101"]
-    assert left.rows[1][0].status == "free"
+    assert [c.code for c in left.cells] == ["L0301", "L0201", "L0101"]
+    assert left.cells[1].status == "free"
 
 
-def test_positions_run_left_to_right():
-    m = build_minimap([place("A", "R0102"), place("B", "R0101")], [row("A", 1), row("B", 1)])
-    right = next(w for w in m.walls if w.side == "R")
-    assert [c.code for c in right.rows[0]] == ["R0101", "R0102"]
+def test_each_shelf_unit_is_its_own_wall():
+    # the last two digits of a code name the shelf unit: L0101 and L0102 stand on different units
+    m = build_minimap([place("A", "L0101"), place("B", "L0102")], [row("A", 1), row("B", 1)])
+    assert [(w.side, w.shelf, [c.code for c in w.cells]) for w in m.walls] == [
+        ("L", 1, ["L0101"]),
+        ("L", 2, ["L0102"]),
+        ("R", 1, []),
+    ]
 
 
 def test_cell_status_is_its_worst_item():
     m = build_minimap([place("A", "R0101"), place("B", "R0101")], [row("A", 0), row("B", -9)])
     right = next(w for w in m.walls if w.side == "R")
-    assert right.rows[0][0].status == "problem"
+    assert right.cells[0].status == "problem"
 
 
 def test_both_sides_exist_even_when_one_is_empty():
     m = build_minimap([place("A", "L0101")], [row("A", 1)])
-    assert [(w.side, len(w.rows)) for w in m.walls] == [("L", 1), ("R", 0)]
-
-
-def test_second_shelf_unit_gets_its_own_wall():
-    m = build_minimap([place("A", "L0101"), place("B", "L0101", shelf=2)], [row("A", 1), row("B", 1)])
-    assert [(w.side, w.shelf) for w in m.walls] == [("L", 1), ("L", 2), ("R", 1)]
+    assert [(w.side, len(w.cells)) for w in m.walls] == [("L", 1), ("R", 0)]
 
 
 def test_unplaced_lists_only_products_to_check():
@@ -70,8 +69,8 @@ def test_repo_data():
         load_stock_csv(ROOT / "data" / "stock_2026-09-28.csv"),
     )
     left = m.walls[0]
-    assert [r[0].code for r in left.rows] == ["L0301", "L0201", "L0101"]
-    assert len(left.rows[0][0].items) == 10
+    assert [c.code for c in left.cells] == ["L0301", "L0201", "L0101"]
+    assert len(left.cells[0].items) == 10
     assert (m.total_products, m.placed, m.to_check, len(m.unplaced)) == (105, 27, 59, 40)
-    pandora_ii = next(i for w in m.walls for r in w.rows for c in r for i in c.items if i.sku == "NA0032")
+    pandora_ii = next(i for w in m.walls for c in w.cells for i in c.items if i.sku == "NA0032")
     assert pandora_ii.status == "problem"

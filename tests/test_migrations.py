@@ -42,3 +42,10 @@ def test_database_bag_subclasses_match_the_code():
         for m in re.finditer(r"packaging_sub in \(([^)]*)\)", p.read_text(encoding="utf-8"))
     ]
     assert checks and tuple(re.findall(r"'([a-z_]+)'", checks[-1])) == SUBCLASSES["bag"]
+
+
+def test_locations_drop_the_position_column():
+    # 6/10 round 4: the code's last two digits are the shelf, and the seed no longer sends a position;
+    # the old NOT NULL column would make every location insert fail
+    text = "\n".join(p.read_text(encoding="utf-8") for p in MIGRATIONS)
+    assert "alter table locations drop column position" in text

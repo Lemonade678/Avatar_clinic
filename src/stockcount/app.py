@@ -22,7 +22,7 @@ from .service import CountError, CountingService, SessionClosed, SlotNotFound
 
 STATIC_DIR = Path(__file__).parent / "static"
 PACKAGING_TH = {
-    "book": "หนังสือ (เล่ม)", "jar": "กระปุก", "paper_wrap": "ห่อกระดาษ", "bag": "ถุง",
+    "book": "หนังสือ (เล่ม)", "jar": "กระปุก", "paper_wrap": "ห่อกระดาษ", "bag": "ถุง", "bottle": "ขวด",
     "spray_bottle": "ขวดสเปรย์", "box": "กล่อง", "tote_bag": "ถุงผ้า (tote bag)", "tin": "กระป๋องยาดม",
 }
 

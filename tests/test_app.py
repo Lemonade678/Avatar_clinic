@@ -116,6 +116,20 @@ def test_slot_page_prefills_the_system_value():
     assert 'name="qty_HB0001"' in r.text and 'value="9"' in r.text
 
 
+def test_slot_page_names_the_shelf_from_the_code():
+    client, _ = dev_client()
+    html = client.get("/loc/L0301").text
+    assert "ชั้นที่ 3" in html and "ชั้นวาง 01" in html and "ตำแหน่ง" not in html
+
+
+def test_every_packaging_class_has_a_thai_label():
+    from stockcount.app import PACKAGING_TH
+    from stockcount.layout import PACKAGING
+
+    assert set(PACKAGING_TH) == set(PACKAGING)
+    assert PACKAGING_TH["bottle"] == "ขวด"
+
+
 def test_unknown_slot_is_404():
     client, _ = dev_client()
     assert client.get("/loc/L0909").status_code == 404

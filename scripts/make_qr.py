@@ -17,7 +17,7 @@ def main(argv: list[str]) -> None:
     base_url = argv[1] if len(argv) > 1 else ""
     cfg = load_config("config.yaml")
     locations = {p.location.code: p.location for p in load_layout_csv(cfg.layout_file)}
-    codes = [l.code for l in sorted(locations.values(), key=lambda l: (l.side, l.shelf, -l.storey, l.position))]
+    codes = [l.code for l in sorted(locations.values(), key=lambda l: (l.side, l.shelf, -l.storey))]
     try:
         urls = {code: slot_url(code, cfg.liff_id, base_url) for code in codes}
     except ValueError as e:

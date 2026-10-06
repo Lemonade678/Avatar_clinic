@@ -197,7 +197,7 @@ def test_minimap_shows_progress():
     svc, _, _ = make()
     svc.save_slot("R0101", "U1", {"A": "9", "B": "7"})
     right = next(w for w in svc.minimap().walls if w.side == "R")
-    cell = next(c for row in right.rows for c in row if c.code == "R0101")
+    cell = next(c for c in right.cells if c.code == "R0101")
     assert {i.sku: i.status for i in cell.items} == {"A": "done", "B": "diff", "D": "empty"}
     assert cell.status == "diff"
 

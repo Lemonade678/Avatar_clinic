@@ -17,8 +17,8 @@ def row(sku, back=0, front=0):
     return StockRow(sku, f"name-{sku}", "cat", back, front, back + front, False)
 
 
-def place(sku, code, shelf=1):
-    return Placement(sku, parse_location(code, shelf))
+def place(sku, code):
+    return Placement(sku, parse_location(code))
 
 
 def test_builds_rows_for_every_table():
@@ -34,7 +34,7 @@ def test_builds_rows_for_every_table():
         {"sku": "S2", "name": "name-S2", "category": "cat", "packaging": None, "packaging_sub": None},
     ]
     assert seed.locations == [
-        {"code": "L0301", "side": "L", "storey": 3, "position": 1, "shelf": 1, "cv_enabled": False}
+        {"code": "L0301", "side": "L", "storey": 3, "shelf": 1, "cv_enabled": False}
     ]
     assert seed.product_locations == [
         {"sku": "S1", "location_code": "L0301"},

@@ -150,7 +150,7 @@ class CountingService:
         """Slots with something to count, in the order the minimap shows them: left then right, top storey first."""
         slots = self._slots_to_count()
         locations = {p.location.code: p.location for p in self.repo.placements() if p.location.code in slots}
-        order = sorted(locations.values(), key=lambda l: (l.side, l.shelf, -l.storey, l.position))
+        order = sorted(locations.values(), key=lambda l: (l.side, l.shelf, -l.storey))
         return [l.code for l in order]
 
     def next_slot(self) -> str | None:
