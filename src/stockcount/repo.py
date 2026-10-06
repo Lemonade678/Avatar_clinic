@@ -11,6 +11,7 @@ from typing import Protocol
 from .cv import CvCheck
 from .layout import Placement, load_layout_csv, load_packaging_csv, load_packaging_subclasses
 from .location import parse_location
+from .lots import ManualLot, Receipt
 from .report import CountRecord, SessionInfo
 from .stock_csv import load_stock_csv
 
@@ -60,6 +61,7 @@ class Repo(Protocol):
     def products(self) -> dict[str, Product]: ...
     def placements(self) -> list[Placement]: ...
     def stock(self) -> tuple[date | None, dict[str, int]]: ...
+    def on_hand(self) -> dict[str, int]: ...
     def session_for(self, count_date: date) -> Session | None: ...
     def start_session(self, count_date: date, now: datetime, user_id: str) -> Session: ...
     def end_session(self, session_id: str, now: datetime) -> None: ...
@@ -72,19 +74,30 @@ class Repo(Protocol):
     def count_records(self, until: date) -> list[CountRecord]: ...
     def sessions(self) -> list[SessionInfo]: ...
     def cv_statuses(self, start: date, end: date) -> list[str]: ...
+    def manual_lots(self) -> list[ManualLot]: ...
+    def add_manual_lot(self, sku: str, lot_date: date, user_id: str, now: datetime) -> None: ...
+    def receipts(self) -> list[Receipt]: ...
 
 
 def _cv_counts(check: CvCheck) -> dict[str, int]:
     return {c.packaging: c.cv for c in check.classes}
 
 
+def _on_hand(back: int, front: int) -> int:
+    return max(0, back + front)  # a negative system record means nothing we can count on
+
+
 class InMemoryRepo:
     def __init__(self, products: dict[str, Product], placements: list[Placement],
-                 stock_as_of: date | None, front_qty: dict[str, int]):
+                 stock_as_of: date | None, front_qty: dict[str, int],
+                 back_qty: dict[str, int] | None = None, receipts: list[Receipt] | tuple = ()):
         self._products = dict(products)
         self._placements = list(placements)
         self._stock_as_of = stock_as_of
         self._front = dict(front_qty)
+        self._back = dict(back_qty or {})
+        self._receipts = list(receipts)
+        self._manual_lots: list[ManualLot] = []
         self._sessions: dict[date, Session] = {}
         self._counts: dict[tuple[str, str], CountRow] = {}
         self._photos: list[PhotoRecord] = []
@@ -102,6 +115,7 @@ class InMemoryRepo:
             placements=load_layout_csv(layout_csv),
             stock_as_of=as_of,
             front_qty={r.sku: r.front_qty for r in rows},
+            back_qty={r.sku: r.back_qty for r in rows},
         )
 
     def products(self) -> dict[str, Product]:
@@ -112,6 +126,9 @@ class InMemoryRepo:
 
     def stock(self) -> tuple[date | None, dict[str, int]]:
         return self._stock_as_of, dict(self._front)
+
+    def on_hand(self) -> dict[str, int]:
+        return {sku: _on_hand(self._back.get(sku, 0), self._front.get(sku, 0)) for sku in set(self._front) | set(self._back)}
 
     def session_for(self, count_date: date) -> Session | None:
         return self._sessions.get(count_date)
@@ -169,11 +186,21 @@ class InMemoryRepo:
     def cv_statuses(self, start: date, end: date) -> list[str]:
         return [p.cv_status for p in self._photos if start <= self._day_of(p.session_id) <= end]
 
+    def manual_lots(self) -> list[ManualLot]:
+        return list(self._manual_lots)
+
+    def add_manual_lot(self, sku: str, lot_date: date, user_id: str, now: datetime) -> None:
+        self._manual_lots.append(ManualLot(sku, lot_date, now))
+
+    def receipts(self) -> list[Receipt]:
+        return list(self._receipts)
+
 
 class SupabaseRepo:
     """Same interface on Supabase. Verified against a real project by scripts/smoke_supabase.py."""
 
     BUCKET = "shelf-photos"
+    PAGE = 1000  # Supabase answers at most 1000 rows per request (API settings -> "Max rows")
 
     def __init__(self, client):
         self.db = client
@@ -187,6 +214,22 @@ class SupabaseRepo:
     def _rows(self, query) -> list[dict]:
         return query.execute().data or []
 
+    def _all(self, build, *order: str) -> list[dict]:
+        """Every row, page by page — one request stops silently at the row cap.
+
+        `build` makes a fresh query per page (postgrest-py adds offset/limit instead of replacing them);
+        `order` must be a unique key ("-col" sorts descending) so pages neither overlap nor skip rows.
+        """
+        rows: list[dict] = []
+        while True:
+            query = build()
+            for column in order:
+                query = query.order(column.lstrip("-"), desc=column.startswith("-"))
+            page = query.range(len(rows), len(rows) + self.PAGE - 1).execute().data or []
+            rows += page
+            if len(page) < self.PAGE:
+                return rows
+
     def products(self) -> dict[str, Product]:
         rows = self._rows(self.db.table("products").select("sku,name,category,packaging,packaging_sub"))
         return {
@@ -197,12 +240,21 @@ class SupabaseRepo:
         links = self._rows(self.db.table("product_locations").select("sku,location_code"))
         return [Placement(l["sku"], parse_location(l["location_code"])) for l in links]
 
+    def _snapshots(self) -> list[dict]:
+        return self._all(lambda: self.db.table("stock_snapshots").select("sku,back_qty,front_qty,as_of"), "-as_of", "sku")
+
     def stock(self) -> tuple[date | None, dict[str, int]]:
-        rows = self._rows(self.db.table("stock_snapshots").select("sku,front_qty,as_of").order("as_of", desc=True))
+        rows = self._snapshots()
         front: dict[str, int] = {}
         for r in rows:
             front.setdefault(r["sku"], r["front_qty"])
         return (date.fromisoformat(rows[0]["as_of"]) if rows else None), front
+
+    def on_hand(self) -> dict[str, int]:
+        latest: dict[str, int] = {}
+        for r in self._snapshots():
+            latest.setdefault(r["sku"], _on_hand(r["back_qty"], r["front_qty"]))
+        return latest
 
     @staticmethod
     def _session(row: dict) -> Session:
@@ -262,8 +314,10 @@ class SupabaseRepo:
     def _all_counts(self, session_ids: list[str]) -> list[dict]:
         if not session_ids:
             return []
-        return self._rows(
-            self.db.table("counts").select("session_id,sku,expected_qty,counted_qty").in_("session_id", session_ids)
+        return self._all(
+            lambda: self.db.table("counts").select("session_id,sku,expected_qty,counted_qty").in_("session_id", session_ids),
+            "session_id",
+            "sku",
         )
 
     def last_counts(self, before: date) -> dict[str, tuple[date, int]]:
@@ -320,5 +374,26 @@ class SupabaseRepo:
         ids = [sid for sid, d in self._session_days().items() if start <= d <= end]
         if not ids:
             return []
-        rows = self._rows(self.db.table("shelf_photos").select("cv_status").in_("session_id", ids))
+        rows = self._all(lambda: self.db.table("shelf_photos").select("id,cv_status").in_("session_id", ids), "id")
         return [r["cv_status"] for r in rows]
+
+    def manual_lots(self) -> list[ManualLot]:
+        rows = self._all(
+            lambda: self.db.table("lot_dates").select("id,sku,lot_date,recorded_at").eq("source", "manual"), "id"
+        )
+        return [ManualLot(r["sku"], date.fromisoformat(r["lot_date"]), datetime.fromisoformat(r["recorded_at"])) for r in rows]
+
+    def add_manual_lot(self, sku: str, lot_date: date, user_id: str, now: datetime) -> None:
+        self.db.table("lot_dates").insert(
+            {
+                "sku": sku,
+                "lot_date": lot_date.isoformat(),
+                "source": "manual",
+                "line_user_id": user_id,
+                "recorded_at": now.isoformat(),
+            }
+        ).execute()
+
+    def receipts(self) -> list[Receipt]:
+        rows = self._all(lambda: self.db.table("lot_dates").select("id,sku,lot_date,qty").eq("source", "receipt"), "id")
+        return [Receipt(r["sku"], date.fromisoformat(r["lot_date"]), r["qty"]) for r in rows]

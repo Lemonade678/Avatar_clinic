@@ -72,3 +72,24 @@ def test_from_files_loads_the_repo_data():
     assert len(r.placements()) == 27
     as_of, front = r.stock()
     assert as_of == date(2026, 9, 28) and front["NA0032"] == -9
+
+
+def test_on_hand_is_back_plus_front():
+    r = InMemoryRepo.from_files(ROOT / "data" / "stock_2026-09-28.csv", ROOT / "data" / "layout_mbk.csv", date(2026, 9, 28))
+    on_hand = r.on_hand()
+    assert on_hand["HB0001"] == 19 and on_hand["NA0032"] == 21
+
+
+def test_typed_lot_dates_and_receipts():
+    from stockcount.lots import ManualLot, Receipt
+
+    r = InMemoryRepo(
+        products={"A": Product("A", "อุระกาวาท", "ผง", "jar")},
+        placements=[],
+        stock_as_of=date(2026, 9, 28),
+        front_qty={"A": 9},
+        receipts=[Receipt("A", date(2026, 6, 17), 4)],
+    )
+    r.add_manual_lot("A", date(2026, 5, 1), "U1", T0)
+    assert r.manual_lots() == [ManualLot("A", date(2026, 5, 1), T0)]
+    assert r.receipts() == [Receipt("A", date(2026, 6, 17), 4)]
