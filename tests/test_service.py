@@ -6,10 +6,19 @@ from PIL import Image
 
 from stockcount.config import parse_config
 from stockcount.cv import CvUnavailable
+from stockcount import messages
 from stockcount.layout import Placement
 from stockcount.location import parse_location
+from stockcount.lots import Receipt
 from stockcount.repo import InMemoryRepo, Product
-from stockcount.service import CountError, CountingService, SessionClosed, SlotNotFound
+from stockcount.service import (
+    CountError,
+    CountingService,
+    LotDateError,
+    ProductNotFound,
+    SessionClosed,
+    SlotNotFound,
+)
 
 UTC = timezone.utc
 PRODUCTS = {
@@ -68,8 +77,8 @@ def jpeg(grey=150):
     return buf.getvalue()
 
 
-def make(cv=None, notifier=None, raw_config=None, t=datetime(2026, 10, 1, 3, 0, tzinfo=UTC)):
-    repo = InMemoryRepo(PRODUCTS, PLACEMENTS, date(2026, 9, 28), FRONT)
+def make(cv=None, notifier=None, raw_config=None, t=datetime(2026, 10, 1, 3, 0, tzinfo=UTC), receipts=()):
+    repo = InMemoryRepo(PRODUCTS, PLACEMENTS, date(2026, 9, 28), FRONT, receipts=list(receipts))
     clock = Clock(t)
     config = parse_config({"branch": "mbk", **(raw_config or {})})
     return CountingService(config, repo, clock, cv_client=cv, notifier=notifier), repo, clock
@@ -249,3 +258,61 @@ def test_stored_photo_is_shrunk_before_saving_and_cv():
     with Image.open(BytesIO(stored)) as img:
         assert max(img.size) == 1280
     assert len(stored) < len(buf.getvalue())
+
+
+# --- two-year shelf life (6/10 round 4: "A + C") -------------------------------------------------------
+# today is 1/10/2026 · on hand = A 9, B 9, C 11, F 12 (D is 0 and E's system record is negative)
+def test_lots_list_stocked_products_worst_first():
+    svc, _, _ = make(receipts=[Receipt("B", date(2024, 12, 1), 20), Receipt("C", date(2026, 9, 1), 20)])
+    svc.save_lot_date("A", "1/9/67", "U1")  # 1 Sep 2024: two years were up on 1 Sep 2026
+    assert [(v.sku, v.status) for v in svc.lots()] == [("A", "expired"), ("B", "soon"), ("F", "unknown"), ("C", "ok")]
+
+
+def test_typed_lot_date_wins_over_the_estimate():
+    svc, _, _ = make(receipts=[Receipt("B", date(2024, 12, 1), 20)])
+    assert svc.save_lot_date("B", "17/6/69", "U1") == date(2026, 6, 17)
+    view = next(v for v in svc.lots() if v.sku == "B")
+    assert (view.lot_date, view.source, view.estimate, view.status) == (date(2026, 6, 17), "manual", date(2024, 12, 1), "ok")
+    assert view.expires == date(2028, 6, 17)
+
+
+def test_unreadable_lot_date_is_refused_with_a_thai_message():
+    svc, repo, _ = make()
+    with pytest.raises(LotDateError) as e:
+        svc.save_lot_date("A", "17/13/69", "U1")
+    assert e.value.message == messages.LOT_DATE_INVALID
+    assert repo.manual_lots() == []
+
+
+def test_lot_date_in_the_future_is_refused():
+    svc, _, _ = make()
+    with pytest.raises(LotDateError) as e:
+        svc.save_lot_date("A", "2/10/69", "U1")  # tomorrow
+    assert e.value.message == messages.LOT_DATE_FUTURE
+
+
+def test_lot_date_for_an_unknown_product_is_refused():
+    svc, _, _ = make()
+    with pytest.raises(ProductNotFound):
+        svc.save_lot_date("ZZ", "17/6/69", "U1")
+
+
+def test_slot_items_carry_their_lot_warning():
+    svc, _, _ = make(receipts=[Receipt("A", date(2024, 12, 1), 20)])
+    items = {i.sku: i for i in svc.slot("R0101").items}
+    assert items["A"].lot.status == "soon" and items["B"].lot.status == "unknown"
+
+
+def test_summary_lists_lots_running_out():
+    svc, _, _ = make(receipts=[Receipt("A", date(2024, 12, 1), 20)])
+    svc.save_lot_date("F", "1/9/67", "U1")
+    assert [(v.sku, v.status) for v in svc.summary().expiring] == [("F", "expired"), ("A", "soon")]
+
+
+def test_line_summary_mentions_lots_running_out():
+    notifier = FakeNotifier()
+    svc, _, _ = make(notifier=notifier, receipts=[Receipt("A", date(2024, 12, 1), 20)])
+    svc.save_lot_date("F", "1/9/67", "U1")
+    svc.submit("U1")
+    text = notifier.sent[0][1]
+    assert "🔴 ครบ 2 ปีแล้ว: ยาธาตุ" in text and "🟡 ใกล้ครบ 2 ปี: อุระกาวาท" in text

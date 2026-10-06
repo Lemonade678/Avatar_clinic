@@ -63,3 +63,19 @@ def test_repo_config_yaml_loads():
     cfg = load_config(Path(__file__).parents[1] / "config.yaml")
     assert cfg.branch == "mbk"
     assert cfg.layout_file == "data/layout_mbk.csv"
+
+
+def test_shelf_life_defaults_to_two_years_with_a_three_month_warning():
+    cfg = parse_config({"branch": "mbk"})
+    assert (cfg.shelf_life_months, cfg.expiry_warn_months) == (24, 3)
+
+
+def test_shelf_life_can_be_set():
+    cfg = parse_config({"branch": "mbk", "shelf_life": {"months": 18, "warn_months": 2}})
+    assert (cfg.shelf_life_months, cfg.expiry_warn_months) == (18, 2)
+
+
+@pytest.mark.parametrize("raw", [{"months": 0}, {"months": 24, "warn_months": 24}, {"months": 24, "warn_months": -1}])
+def test_impossible_shelf_life_is_refused(raw):
+    with pytest.raises(ConfigError, match="shelf_life"):
+        parse_config({"branch": "mbk", "shelf_life": raw})

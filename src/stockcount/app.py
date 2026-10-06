@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+from collections import Counter
 from dataclasses import asdict
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -18,7 +19,7 @@ from .auth import AuthError
 from .location import LocationError, parse_location
 from .render import render_page
 from .report import week_bounds, week_of
-from .service import CountError, CountingService, SessionClosed, SlotNotFound
+from .service import CountError, CountingService, LotDateError, ProductNotFound, SessionClosed, SlotNotFound
 
 STATIC_DIR = Path(__file__).parent / "static"
 PACKAGING_TH = {
@@ -57,6 +58,8 @@ def create_app(
             camera_default=config.camera_default,
             packaging_th=PACKAGING_TH,
             minutes_text=messages.minutes_text,
+            lot_date_text=messages.lot_date_text,
+            shelf_life=messages.shelf_life_text(config.shelf_life_months),
             **ctx,
         )
         return HTMLResponse(html, status_code=status)
@@ -222,6 +225,37 @@ def create_app(
         if isinstance(user, Response):
             return user
         return page("scan.html", nav="scan")
+
+    def lots_response(request: Request, status: int = 200, errors=None, values=None) -> Response:
+        views = service.lots()
+        return page(
+            "lots.html", status=status, nav="lots", lots=views, counts=Counter(v.status for v in views),
+            errors=errors or {}, values=values or {}, flash=request.session.pop("lot_flash", None),
+        )
+
+    @app.get("/lots")
+    def lots_page(request: Request):
+        user = current_user(request)
+        if isinstance(user, Response):
+            return user
+        return lots_response(request)
+
+    @app.post("/lots/{sku}")
+    async def lot_save(request: Request, sku: str):
+        user = current_user(request)
+        if isinstance(user, Response):
+            return user
+        form = await request.form()
+        raw = str(form.get("lot_date", ""))[:40]
+        try:
+            value = await run_in_threadpool(service.save_lot_date, sku, raw, user)
+        except ProductNotFound:
+            return error(404, f"ไม่พบสินค้า {sku}")
+        except LotDateError as e:
+            return lots_response(request, status=422, errors={sku: e.message}, values={sku: raw})
+        name = service.repo.products()[sku].name
+        request.session["lot_flash"] = {"name": name, "date": messages.lot_date_text(value)}
+        return RedirectResponse(f"/lots#{sku}", status_code=303)
 
     @app.get("/report")
     def report_page(request: Request, week: str | None = None):

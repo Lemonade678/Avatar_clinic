@@ -243,3 +243,50 @@ def test_dev_mode_refuses_to_run_on_railway(monkeypatch, no_dotenv):
     monkeypatch.setenv("RAILWAY_PROJECT_ID", "abc")
     with pytest.raises(RuntimeError, match="Railway"):
         build_default_app()
+
+
+# --- lots page (two-year shelf life) ---------------------------------------------------------------
+def test_lots_page_saves_a_typed_date():
+    client, _ = dev_client()
+    page = client.get("/lots")
+    assert page.status_code == 200 and "อุระกาวาท" in page.text
+    r = client.post("/lots/HB0001", data={"lot_date": "17/6/69"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/lots#HB0001"
+    after = client.get("/lots").text
+    assert "บันทึกล็อต" in after and "17/6/69" in after and "17/6/71" in after  # the date and its two-year mark
+
+
+def test_bad_lot_date_shows_the_page_again():
+    client, _ = dev_client()
+    r = client.post("/lots/HB0001", data={"lot_date": "abc"})
+    assert r.status_code == 422 and "อ่านวันที่ไม่ออก" in r.text and 'value="abc"' in r.text
+
+
+def test_lot_date_for_an_unknown_product_is_404():
+    client, _ = dev_client()
+    r = client.post("/lots/ZZ9999", data={"lot_date": "17/6/69"})
+    assert r.status_code == 404 and "ไม่พบสินค้า ZZ9999" in r.text
+
+
+def test_menu_links_to_the_lots_page():
+    client, _ = dev_client()
+    assert 'href="/lots"' in client.get("/map").text
+
+
+def test_slot_page_warns_about_a_lot_running_out():
+    client, _ = dev_client()
+    client.post("/lots/HB0001", data={"lot_date": "1/9/67"})
+    assert "🔴 ครบ 2 ปี" in client.get("/loc/R0101").text
+
+
+def test_summary_page_lists_lots_running_out():
+    client, _ = dev_client()
+    client.post("/lots/HB0001", data={"lot_date": "1/9/67"})
+    html = client.get("/summary").text
+    assert "อายุสินค้า" in html and "อุระกาวาท" in html
+
+
+def test_lots_page_can_search_by_name_or_code():
+    # 70+ stocked products: same search box as the map, wrong keyboard layout included
+    html = dev_client()[0].get("/lots").text
+    assert 'id="q"' in html and 'data-search="อุระกาวาท hb0001"' in html and "const EN_TO_TH" in html

@@ -37,6 +37,8 @@ class AppConfig:
     layout_file: str
     cv: CvConfig
     min_brightness: int
+    shelf_life_months: int = 24  # ministry rule: two years for every product
+    expiry_warn_months: int = 3
 
     def is_allowed(self, user_id: str) -> bool:
         return not self.allowed_line_user_ids or user_id in self.allowed_line_user_ids
@@ -79,6 +81,12 @@ def parse_config(raw: dict) -> AppConfig:
     brightness = int((raw.get("photo") or {}).get("min_brightness", 60))
     if not 0 <= brightness <= 255:
         raise ConfigError(f"photo.min_brightness must be 0-255, got {brightness}")
+    life = raw.get("shelf_life") or {}
+    months, warn = int(life.get("months", 24)), int(life.get("warn_months", 3))
+    if not 1 <= months <= 120:
+        raise ConfigError(f"shelf_life.months must be 1-120, got {months}")
+    if not 0 <= warn < months:
+        raise ConfigError(f"shelf_life.warn_months must be 0 to {months - 1}, got {warn}")
 
     return AppConfig(
         branch=str(raw["branch"]),
@@ -89,4 +97,6 @@ def parse_config(raw: dict) -> AppConfig:
         layout_file=str(raw.get("layout_file", "data/layout_mbk.csv")),
         cv=_parse_cv(raw.get("cv") or {}),
         min_brightness=brightness,
+        shelf_life_months=months,
+        expiry_warn_months=warn,
     )

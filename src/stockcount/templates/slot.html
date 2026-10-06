@@ -24,7 +24,7 @@
     <li class="{{ i.status }}{{ ' has-error' if errors.get(i.sku) }}">
       <label for="qty_{{ i.sku }}">
         <span class="name">{{ i.name }}</span>
-        <span class="meta">ระบบ <b>{{ i.expected }}</b>{% if i.last %} · ครั้งก่อน {{ i.last[1] }} ({{ i.last[0].strftime("%d/%m") }}){% endif %}{% if i.status == "problem" %} · ⚠️ ยอดระบบติดลบ นับของจริง{% endif %}</span>
+        <span class="meta">ระบบ <b>{{ i.expected }}</b>{% if i.last %} · ครั้งก่อน {{ i.last[1] }} ({{ i.last[0].strftime("%d/%m") }}){% endif %}{% if i.status == "problem" %} · ⚠️ ยอดระบบติดลบ นับของจริง{% endif %}{% if i.lot and i.lot.status in ("expired", "soon") %} · <a class="lot-tag {{ i.lot.status }}" href="/lots#{{ i.sku }}">{{ "🔴 ครบ " ~ shelf_life ~ "แล้ว" if i.lot.status == "expired" else "🟡 ใกล้ครบ " ~ shelf_life }} (ล็อต {{ lot_date_text(i.lot.lot_date) }})</a>{% endif %}</span>
       </label>
       <input id="qty_{{ i.sku }}" name="qty_{{ i.sku }}" value="{{ value }}" inputmode="numeric" autocomplete="off"
              data-sku="{{ i.sku }}"{{ " disabled" if view.read_only }}>

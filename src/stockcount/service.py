@@ -12,6 +12,8 @@ from . import messages
 from .config import AppConfig
 from .cv import SKIPPED, CvCheck, CvClient, CvUnavailable, compare_cv, count_predictions, human_counts_by_class
 from .location import Location
+from .lots import STATUS_ORDER as LOT_ORDER
+from .lots import LotError, add_months, expiry_status, parse_lot_date, resolve_lots
 from .minimap import Minimap, apply_progress, build_minimap, item_status
 from .photo import PhotoError, brightness, is_too_dark, shrink
 from .repo import CountRow, PhotoRecord, Repo, Session
@@ -38,10 +40,35 @@ class SessionClosed(RuntimeError):
     pass
 
 
+class ProductNotFound(LookupError):
+    pass
+
+
+class LotDateError(ValueError):
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message  # Thai, shown next to the field
+
+
 class CountError(ValueError):
     def __init__(self, errors: dict[str, str]):
         super().__init__(f"invalid counts: {errors}")
         self.errors = errors
+
+
+@dataclass(frozen=True)
+class LotView:
+    """Where one stocked product stands on the two-year clock."""
+
+    sku: str
+    name: str
+    on_hand: int
+    status: str  # expired | soon | unknown | ok
+    lot_date: date | None = None
+    source: str | None = None  # manual (typed from the pack) | receipt (FIFO estimate)
+    at_least: bool = False  # the oldest lot is even older than lot_date
+    estimate: date | None = None
+    expires: date | None = None
 
 
 @dataclass(frozen=True)
@@ -53,6 +80,7 @@ class SlotItem:
     status: str
     last: tuple[date, int] | None
     counted: int | None
+    lot: LotView | None = None
 
 
 @dataclass(frozen=True)
@@ -98,6 +126,8 @@ class ShiftSummary:
     missing_slots: tuple[str, ...]
     mismatches: tuple[Mismatch, ...]
     cv_flagged_slots: tuple[str, ...]
+    expiring: tuple[LotView, ...] = ()  # expired first, then running out soon
+    shelf_life_months: int = 24
 
 
 class CountingService:
@@ -167,6 +197,7 @@ class CountingService:
         session = self.repo.session_for(self.today())
         counted = {r.sku: r.counted_qty for r in self.repo.counts(session.id)} if session else {}
         last = self.repo.last_counts(before=self.today())
+        lots = {v.sku: v for v in self.lots()}
 
         items, hidden = [], 0
         for p in self.repo.placements():
@@ -178,7 +209,9 @@ class CountingService:
                 hidden += 1
                 continue
             product = products[p.sku]
-            items.append(SlotItem(p.sku, product.name, product.packaging, qty, status, last.get(p.sku), counted.get(p.sku)))
+            items.append(
+                SlotItem(p.sku, product.name, product.packaging, qty, status, last.get(p.sku), counted.get(p.sku), lots.get(p.sku))
+            )
 
         photos = tuple(ph for ph in self.repo.photos(session.id) if ph.location_code == location.code) if session else ()
         return SlotView(
@@ -277,7 +310,52 @@ class CountingService:
             missing_slots=tuple(sorted(code for code in slots if code not in done)),
             mismatches=mismatches,
             cv_flagged_slots=tuple(flagged),
+            expiring=tuple(v for v in self.lots() if v.status in ("expired", "soon")),
+            shelf_life_months=self.config.shelf_life_months,
         )
+
+    # --- two-year shelf life ------------------------------------------------------------
+    def lots(self) -> list[LotView]:
+        """Every product with stock on hand, worst first: expired, running out, no date yet, fine."""
+        products = self.repo.products()
+        on_hand = self.repo.on_hand()
+        known = resolve_lots(self.repo.manual_lots(), self.repo.receipts(), on_hand)
+        life, warn, today = self.config.shelf_life_months, self.config.expiry_warn_months, self.today()
+        views = []
+        for sku, qty in on_hand.items():
+            if qty <= 0 or sku not in products:
+                continue
+            lot = known.get(sku)
+            if lot is None:
+                views.append(LotView(sku, products[sku].name, qty, "unknown"))
+                continue
+            views.append(
+                LotView(
+                    sku,
+                    products[sku].name,
+                    qty,
+                    expiry_status(lot.lot_date, today, life, warn),
+                    lot.lot_date,
+                    lot.source,
+                    lot.at_least,
+                    lot.estimate,
+                    add_months(lot.lot_date, life),
+                )
+            )
+        return sorted(views, key=lambda v: (LOT_ORDER.index(v.status), v.expires or date.max, v.name))
+
+    def save_lot_date(self, sku: str, raw: str, user_id: str) -> date:
+        """The date on the oldest pack of one product (method A); it wins over the receipt estimate."""
+        if sku not in self.repo.products():
+            raise ProductNotFound(sku)
+        try:
+            value = parse_lot_date(raw)
+        except LotError:
+            raise LotDateError(messages.LOT_DATE_INVALID) from None
+        if value > self.today():
+            raise LotDateError(messages.LOT_DATE_FUTURE)
+        self.repo.add_manual_lot(sku, value, user_id, self.now())
+        return value
 
     def minimap(self) -> Minimap:
         products = self.repo.products()

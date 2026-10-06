@@ -33,5 +33,16 @@
   <p>ตรงกับระบบทุกรายการ ✅</p>
   {% endif %}
 </section>
+{% if s.expiring %}
+<section class="pad-x">
+  <h2>⏳ อายุสินค้า {{ shelf_life }}</h2>
+  <ul class="plain">
+  {% for v in s.expiring %}
+    <li>{{ "🔴 ครบแล้ว" if v.status == "expired" else "🟡 ใกล้ครบ" }} — {{ v.name }} (ล็อต {{ lot_date_text(v.lot_date) }} · ครบ {{ lot_date_text(v.expires) }})</li>
+  {% endfor %}
+  </ul>
+  <p><a href="/lots">📅 ไปหน้าล็อต</a></p>
+</section>
+{% endif %}
 <p class="pad-x"><a href="/report">📊 รายงานรายอาทิตย์</a> · <a href="/map">🗺️ กลับแผนผัง</a></p>
 {% endblock %}

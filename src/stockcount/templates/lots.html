@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% import "_map_macros.html" as ui %}
+{% block title %}ล็อตสินค้า{% endblock %}
+{% block body %}
+<header class="page">
+  <h1>📅 ล็อตสินค้า · อายุ {{ shelf_life }}</h1>
+  <div class="sub">ใส่วันที่บนถุง/กล่องที่<b>เก่าที่สุด</b>ของแต่ละตัว (เช่น 17.6.69) · ไม่ใส่ = ระบบประมาณจากวันรับของ ถ้ามีข้อมูล</div>
+</header>
+{% if flash %}<div class="pad-x"><div class="banner ok">บันทึกล็อต {{ flash.name }}: {{ flash.date }} ✅</div></div>{% endif %}
+<div class="stats">
+  <div class="stat">🔴 ครบแล้ว <b>{{ counts.expired }}</b></div>
+  <div class="stat">🟡 ใกล้ครบ <b>{{ counts.soon }}</b></div>
+  <div class="stat">❔ ยังไม่มีวันที่ <b>{{ counts.unknown }}</b></div>
+</div>
+{{ ui.search_box() }}
+<ul class="lot-list">
+{% for v in lots %}
+  <li id="{{ v.sku }}" class="{{ v.status }}{{ ' has-error' if errors.get(v.sku) }}" data-search="{{ (v.name ~ ' ' ~ v.sku)|lower }}">
+    <div class="name">{{ {"expired": "🔴", "soon": "🟡", "unknown": "❔", "ok": "✅"}[v.status] }} {{ v.name }} <span class="meta">· มี {{ v.on_hand }}</span></div>
+    <div class="meta">
+      {% if v.lot_date %}
+        ล็อตเก่าสุด {{ "≤ " if v.at_least }}{{ lot_date_text(v.lot_date) }}
+        ({{ "จากถุง" if v.source == "manual" else ("เก่ากว่าข้อมูลวันรับของที่มี" if v.at_least else "ประมาณจากวันรับของ") }})
+        · ครบ {{ shelf_life }} {{ lot_date_text(v.expires) }}
+        {% if v.source == "manual" and v.estimate and v.estimate != v.lot_date %} · วันรับของบอก {{ lot_date_text(v.estimate) }}{% endif %}
+      {% else %}ยังไม่รู้วันที่ล็อต{% endif %}
+    </div>
+    <form method="post" action="/lots/{{ v.sku }}" class="lot-form">
+      <input name="lot_date" value="{{ values.get(v.sku, '') }}" placeholder="วันที่ล็อตเก่าสุด เช่น 17.6.69"
+             inputmode="decimal" autocomplete="off" aria-label="วันที่ล็อตเก่าสุดของ {{ v.name }}">
+      <button type="submit" class="ghost">💾</button>
+    </form>
+    {% if errors.get(v.sku) %}<div class="error">{{ errors[v.sku] }}</div>{% endif %}
+  </li>
+{% else %}
+  <li class="ok">ยังไม่มีสินค้าในสต็อก</li>
+{% endfor %}
+</ul>
+<script>
+{% include "_search.js" %}
+</script>
+{% endblock %}
