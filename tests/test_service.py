@@ -237,3 +237,15 @@ def test_next_slot_skips_what_is_done():
     svc.save_slot("R0301", "U1", {"E": "3"})
     svc.save_slot("R0101", "U1", {"A": "9", "B": "9"})
     assert svc.next_slot() is None
+
+
+def test_stored_photo_is_shrunk_before_saving_and_cv():
+    cv = FakeCv(bottles=18)
+    svc, repo, _ = make(cv=cv)
+    buf = BytesIO()
+    Image.effect_noise((1600, 1200), 64).convert("RGB").save(buf, format="JPEG", quality=95)
+    svc.save_slot("R0101", "U1", {"A": "9", "B": "9"}, photo=buf.getvalue())
+    [stored] = repo.photo_bytes.values()
+    with Image.open(BytesIO(stored)) as img:
+        assert max(img.size) == 1280
+    assert len(stored) < len(buf.getvalue())

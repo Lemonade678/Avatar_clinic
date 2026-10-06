@@ -3,11 +3,28 @@ from __future__ import annotations
 
 from io import BytesIO
 
-from PIL import Image, ImageStat, UnidentifiedImageError
+from PIL import Image, ImageOps, ImageStat, UnidentifiedImageError
+
+
+MAX_SIDE = 1280  # plenty for counting packages; keeps ~2 years of photos inside Supabase's free 1 GB
+JPEG_QUALITY = 80
 
 
 class PhotoError(ValueError):
     pass
+
+
+def shrink(content: bytes, max_side: int = MAX_SIDE, quality: int = JPEG_QUALITY) -> bytes:
+    """Upright, at most `max_side` px on the long side, re-encoded as JPEG (also drops EXIF such as GPS)."""
+    try:
+        with Image.open(BytesIO(content)) as img:
+            upright = ImageOps.exif_transpose(img).convert("RGB")
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as e:
+        raise PhotoError("not a readable image") from e
+    upright.thumbnail((max_side, max_side))
+    out = BytesIO()
+    upright.save(out, format="JPEG", quality=quality, optimize=True)
+    return out.getvalue()
 
 
 def brightness(content: bytes) -> float:

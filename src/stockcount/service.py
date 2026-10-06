@@ -13,7 +13,7 @@ from .config import AppConfig
 from .cv import SKIPPED, CvCheck, CvClient, CvUnavailable, compare_cv, count_predictions, human_counts_by_class
 from .location import Location
 from .minimap import Minimap, apply_progress, build_minimap, item_status
-from .photo import PhotoError, brightness, is_too_dark
+from .photo import PhotoError, brightness, is_too_dark, shrink
 from .repo import CountRow, PhotoRecord, Repo, Session
 from .report import WeeklyReport, build_weekly_report, week_bounds
 from .speech import parse_spoken
@@ -223,6 +223,7 @@ class CountingService:
             return SaveResult(mismatches, None)
 
         try:
+            photo = shrink(photo)  # smaller upload to Roboflow + years of photos inside the free storage
             light = brightness(photo)
         except PhotoError as e:
             log.warning("photo for %s rejected: %s", view.code, e)
