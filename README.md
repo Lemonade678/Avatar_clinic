@@ -1,13 +1,13 @@
 # Stock Count — Avatar Clinic
 
-[![tests](https://github.com/Lemonade678/Avatar_clinic/actions/workflows/tests.yml/badge.svg?branch=stock-count)](https://github.com/Lemonade678/Avatar_clinic/actions/workflows/tests.yml)
+[![tests](https://github.com/Lemonade678/Avatar_clinic/actions/workflows/tests.yml/badge.svg?branch=Stock-count-fork)](https://github.com/Lemonade678/Avatar_clinic/actions/workflows/tests.yml)
 
 Back-store stock counting for Avatar Clinic branches: a guided, phone-first count inside LINE, a computer-vision cross-check, two-year shelf-life tracking and weekly stock reporting.
 
 | | |
 |---|---|
 | **Status** | Pilot · MBK branch · 1 month |
-| **Branch** | `stock-count` in the [Avatar_clinic](https://github.com/Lemonade678/Avatar_clinic) monorepo |
+| **Branch** | `Stock-count-fork` (forked from `main`) in the [Avatar_clinic](https://github.com/Lemonade678/Avatar_clinic) monorepo |
 | **Stack** | Python 3.12 · FastAPI · Supabase · LINE LIFF · Roboflow · Railway |
 | **Owner** | Avatar Clinic tech team · maintainer [@Lemonade678](https://github.com/Lemonade678) |
 
@@ -112,7 +112,7 @@ The first candidate is RF-DETR (Apache-2.0 sizes, trained on Roboflow's free pla
 | `tests/` | pytest suite, including an in-memory Supabase fake |
 
 ## Development workflow
-- `stock-count` is this service's integration branch in the Avatar_clinic monorepo. Work on short-lived branches (`feat/…`, `fix/…`, `docs/…`) and open a pull request into `stock-count`.
+- `Stock-count-fork` is this service's integration branch, forked from `main` in the Avatar_clinic monorepo. Work on short-lived branches (`feat/…`, `fix/…`, `docs/…`) and open a pull request into `Stock-count-fork`; it reaches `main` through a reviewed pull request.
 - Commit messages follow Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`).
 - CI (`tests.yml`) must pass before merging; new behaviour arrives with its test, written first.
 - Design changes are recorded as a new dated spec in `docs/specs/` instead of rewriting history.
@@ -120,7 +120,7 @@ The first candidate is RF-DETR (Apache-2.0 sizes, trained on Roboflow's free pla
 ## Security and data handling
 - Data stays within at most five countries; today that is Thailand, Japan (LINE), Singapore (Supabase, Railway) and the United States (Roboflow, GitHub).
 - Photos are resized to at most 1280 px and stripped of EXIF metadata, GPS included, before storage.
-- The repository is private: `data/` holds real stock figures.
+- The repository must stay private: `data/` holds real stock figures.
 - Secrets live in environment variables only; logs never contain the Roboflow key.
 - Report security problems privately to the maintainers, not in issues.
 
@@ -134,4 +134,4 @@ The first candidate is RF-DETR (Apache-2.0 sizes, trained on Roboflow's free pla
 The concept was inspired by the warehouse stock-checking work of **Fling Asia (Fling.AI)** and adapted for a small retail back store.
 
 ## License
-Proprietary. © 2026 Avatar Clinic. All rights reserved; internal use only.
+Proprietary. © 2026 Avatar Clinic. All rights reserved; internal use only. See [LICENSE](LICENSE).

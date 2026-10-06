@@ -1,7 +1,7 @@
 name: db-migrate
 on:
   push:
-    branches: [stock-count]  # this service's branch in the Avatar_clinic monorepo
+    branches: [Stock-count-fork]  # this service's branch in the Avatar_clinic monorepo (forked from main)
     paths: ["supabase/migrations/**"]
   workflow_dispatch:
 jobs:

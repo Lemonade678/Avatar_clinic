@@ -209,7 +209,7 @@ COCO numbers come from each developer's own documents; nobody has re-measured th
 ## Where it runs
 - Dev: ณัฑฒ์'s Windows machine + ngrok (LIFF needs HTTPS)
 - Pilot: **Railway** Hobby $5/month (Singapore region) — see the budget table below
-- Repo: **`Lemonade678/Avatar_clinic`** (private · the company's combined repo: backends together, sub-projects on their own branches) → this work lives on branch **`stock-count`** (✅ round 4 · ณัฑฒ์ pushes it — [[guide-push-stock-count-branch]])
+- Repo: **`Lemonade678/Avatar_clinic`** (private · the company's combined repo: backends together, sub-projects on their own branches) → this work lives on branch **`Stock-count-fork`** (forked from main · ✅ round 4 · proprietary licence · ⚠️ the repo is still public and must be made private · ณัฑฒ์ pushes it — [[guide-push-stock-count-branch]])
 
 ## 💰 Monthly budget (answered 6/10: system cost ≤ 3,000 THB/month)
 Prices from each vendor's pricing page on 6/10/2026 (~36 THB/USD — approximate)
@@ -223,7 +223,7 @@ Prices from each vendor's pricing page on 6/10/2026 (~36 THB/USD — approximate
 | **Total** | | **≈ 180 THB** | if it grows: Supabase Pro $25 (~900) + Roboflow Core $39 (~1,400) → ~2,500 THB, still within budget |
 
 ## ✅ Answered
-- Branch = MBK (the 28/9 sheet is the MBK stock) · permission to put up QR codes: **not needed** · LINE OA: **ณัฑฒ์'s own account** · deploy: **Railway** · data: **≤ 5 countries** (Singapore is fine) · **budget = system cost ≤ 3,000 THB/month** (6/10) · **one QR per storey** (6/10) — if a storey ever holds several positions (L0301, L0302), decide then between one QR for the whole storey or one per position · **round 4:** the last two digits of a slot code are the shelf unit (MBK has one) · CABA + banana juice = bottle · lot dates = A + C · scored the instance-segmentation way (mAP@50, mAP@50:95, F1, time) · company-style README + branch `stock-count`
+- Branch = MBK (the 28/9 sheet is the MBK stock) · permission to put up QR codes: **not needed** · LINE OA: **ณัฑฒ์'s own account** · deploy: **Railway** · data: **≤ 5 countries** (Singapore is fine) · **budget = system cost ≤ 3,000 THB/month** (6/10) · **one QR per storey** (6/10) — if a storey ever holds several positions (L0301, L0302), decide then between one QR for the whole storey or one per position · **round 4:** the last two digits of a slot code are the shelf unit (MBK has one) · CABA + banana juice = bottle · lot dates = A + C · scored the instance-segmentation way (mAP@50, mAP@50:95, F1, time) · company-style README + branch `Stock-count-fork` + proprietary licence
 
 ## ❓ Open questions (6/10 round 4 · original numbers)
 2. **Can the old stock system export receiving history?** — a CSV for MBK with product code · date received · quantity (Thai or English headers) → run it with [[guide-import-lot-dates]]
