@@ -74,3 +74,16 @@ def test_replacing_receipts_inserts_in_batches():
     SupabaseRepo(db).replace_receipts([Receipt(f"P{i:04d}", date(2026, 6, 17), 1) for i in range(1200)])
     assert len(db.tables["lot_dates"]) == 1200
     assert db.requests == 1 + 3  # one delete, then batches of 500
+
+
+def test_stock_reads_only_the_latest_snapshot():
+    # a month of imports is 30 x 105 rows; every page view must not pay for the whole history
+    snapshots = [
+        {"sku": f"P{i:03d}", "back_qty": 1, "front_qty": day, "as_of": f"2026-09-{day:02d}"}
+        for day in range(1, 31)
+        for i in range(105)
+    ]
+    db = FakeSupabase({"stock_snapshots": snapshots})
+    as_of, front = SupabaseRepo(db).stock()
+    assert as_of == date(2026, 9, 30) and len(front) == 105 and front["P000"] == 30
+    assert db.requests <= 2

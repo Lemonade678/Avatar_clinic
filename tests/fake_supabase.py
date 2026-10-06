@@ -50,6 +50,11 @@ class _Query:
         self.window = (start, end - start + 1)
         return self
 
+    def limit(self, n):
+        assert self.window is None, "limit() after range(): postgrest-py would send limit twice"
+        self.window = (0, n)
+        return self
+
     def insert(self, rows):
         self.action, self.payload = "insert", rows if isinstance(rows, list) else [rows]
         return self

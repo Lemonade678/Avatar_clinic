@@ -182,7 +182,7 @@ COCO numbers come from each developer's own documents; nobody has re-measured th
 | `shelf_photos` | `session_id`, `location_code`, `storage_path`, `cv_counts`, `human_counts`, `cv_status`, `brightness` | phase 2–3 dataset · **photos are shrunk before storing** (long side ≤ 1280 px, JPEG, upright, EXIF/GPS dropped) |
 | `lot_dates` (round 4) | `sku`, `lot_date`, `source` (`manual` from the pack / `receipt` from the old system), `qty`, `line_user_id`, `recorded_at` | typed dates keep their history, the newest wins · receipts are replaced as a set on every import |
 - Schema changes go in a new migration, never by editing the old one · FKs to `products.sku` use `on update cascade`
-- ⚠️ Supabase answers at most 1,000 rows per request → the code pages through results ordered by a unique key (✅ fixed in round 4 — unfixed, the weekly report would have gone wrong around week 3 of the pilot)
+- ⚠️ Supabase answers at most 1,000 rows per request → the code pages through results ordered by a unique key · stock reads only the newest sheet (✅ fixed in round 4 — unfixed, the weekly report would have gone wrong around week 3 of the pilot)
 
 ## Weekly report
 - **Top 1–2–3 fast movers** = sum of `max(0, previous − current)` over the week (increases = restocks, not counted) · ⚠️ an estimate
@@ -202,7 +202,7 @@ COCO numbers come from each developer's own documents; nobody has re-measured th
 | Supabase down | "Save failed, try again" · entered values stay |
 
 ## Testing
-- **Unit:** ✅ all done — slot codes/layout, minimap, wrong keyboard layout, CSV, CV comparison, weekly report, time clock, Thai/English number words + (round 4) lots/two-year shelf life, COCO-style metrics, a Supabase fake with the 1,000-row cap · **283 tests**
+- **Unit:** ✅ all done — slot codes/layout, minimap, wrong keyboard layout, CSV, CV comparison, weekly report, time clock, Thai/English number words + (round 4) lots/two-year shelf life, COCO-style metrics, a Supabase fake with the 1,000-row cap · **284 tests**
 - **Pages:** `TestClient` + fake LINE/Roboflow + `InMemoryRepo` · every page UTF-8 · product names escaped
 - **Real:** Supabase smoke script · a real phone (front camera) scanning one slot QR · time one full round + count taps
 

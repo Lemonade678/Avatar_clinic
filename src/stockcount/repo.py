@@ -241,20 +241,22 @@ class SupabaseRepo:
         return [Placement(l["sku"], parse_location(l["location_code"])) for l in links]
 
     def _snapshots(self) -> list[dict]:
-        return self._all(lambda: self.db.table("stock_snapshots").select("sku,back_qty,front_qty,as_of"), "-as_of", "sku")
+        """Rows of the newest stock sheet only: older sheets are history, and reading them all would slow
+        every page as imports pile up. A product missing from the newest sheet counts as not stocked."""
+        newest = self._rows(self.db.table("stock_snapshots").select("as_of").order("as_of", desc=True).limit(1))
+        if not newest:
+            return []
+        as_of = newest[0]["as_of"]
+        return self._all(
+            lambda: self.db.table("stock_snapshots").select("sku,back_qty,front_qty,as_of").eq("as_of", as_of), "sku"
+        )
 
     def stock(self) -> tuple[date | None, dict[str, int]]:
         rows = self._snapshots()
-        front: dict[str, int] = {}
-        for r in rows:
-            front.setdefault(r["sku"], r["front_qty"])
-        return (date.fromisoformat(rows[0]["as_of"]) if rows else None), front
+        return (date.fromisoformat(rows[0]["as_of"]) if rows else None), {r["sku"]: r["front_qty"] for r in rows}
 
     def on_hand(self) -> dict[str, int]:
-        latest: dict[str, int] = {}
-        for r in self._snapshots():
-            latest.setdefault(r["sku"], _on_hand(r["back_qty"], r["front_qty"]))
-        return latest
+        return {r["sku"]: _on_hand(r["back_qty"], r["front_qty"]) for r in self._snapshots()}
 
     @staticmethod
     def _session(row: dict) -> Session:
