@@ -35,7 +35,7 @@ A **minimap** (a floor plan like a Siam Paragon mall directory) doubles as the S
 | **Budget ≤ 3,000 THB/month** (system cost · ✅ answered 6/10) | Free tiers wherever possible: Supabase free · Roboflow free/starter · smallest Railway plan · no extra hardware in phase 1 |
 | **At most 1 month to implement for real** | Cut scope to an MVP · anything that doesn't fit (e.g. voice) becomes an optional task at the end of the plan |
 | **Data may pass through at most 5 countries** (was "must not leave the country" → relaxed by ณัฑฒ์ to ≤ 5 countries on 30/9) | Currently 4 countries — see "Where the data goes" |
-| **Ministry rule: products may stay in stock for at most 2 years** (✅ answered 6/10 · dried herbs have no expiry, the limit is for safety and hygiene) | We need to know when each lot entered stock and warn before 2 years → ❓ question 2 picks how to record dates · meanwhile nothing is deleted automatically |
+| **Shelf life is 2 years for every product** (✅ 6/10 round 3 · supplements such as Touch Up, Tidy, ROZY included · ministry rule for safety and hygiene) | We need each lot's date and a warning before 2 years → ❓ question 2 picks how to record dates · meanwhile nothing is deleted automatically |
 | **Low light** — small room, 1–2 lamps, some dark corners | The photo screen has a torch button · train on photos taken in this room's real light · flag "too dark" when brightness is low |
 | **Trade secrets** | Private repo · RLS on every table · private photo bucket · no public web pages |
 
@@ -46,7 +46,7 @@ A **minimap** (a floor plan like a Siam Paragon mall directory) doubles as the S
 | **Check only the "front store" (หน้าร้าน) quantity from the sheet** (> 0 = check · 0 = not stocked, skip · negative = the system record is wrong) | The "back store" (หลังร้าน) quantity (later) |
 | UI pages inside LINE (LIFF) rendered as HTML by FastAPI · minimap | A separate mobile app |
 | One QR **per storey** (✅ 6/10) — at MBK every storey has one slot (position 01), so this equals one per slot, e.g. `L0301` · scanned inside the page, front or back camera selectable | One QR per product |
-| CV counts per **object type, 6 classes** (paper medicine bag · plastic medicine bag · plastic medicine bottle · box · tote bag · inhaler tin) | Per-SKU CV (phase 2) |
+| CV counts per **object type, 8 classes** (book · jar · paper wrap · bag · spray bottle · box · tote bag · inhaler tin) | Per-SKU CV (phase 2) |
 | Search/input that **repairs a forgotten keyboard switch** Thai↔English (✅ built) · voice input Thai/English | — |
 | Starting stock from the 28/9/2026 sheet (105 products · printed header says "สาขาลาดพร้าว" but it is the MBK stock) | Automatic link to the existing stock system |
 | Weekly report (estimated from stock decreases) | Real sales from the POS |
@@ -132,7 +132,7 @@ flowchart LR
 - Only words that become a known product name/unit are converted · number-only words are never touched · used by both search and input
 
 ## CV cross-check (small model)
-- Roboflow object detection, **6 classes** (✅ 6/10): `paper_bag` paper medicine bag · `plastic_bag` plastic medicine bag · `plastic_bottle` plastic medicine bottle · `box` box · `tote_bag` tote bag · `tin` inhaler tin · **≤ 2,500 training images** (start with 50–100, then add) · shot in the MBK room's real light · books have no class yet (not cross-checked)
+- Roboflow object detection, **8 classes** (✅ 6/10 round 3): `book` book · `jar` jar (glass or plastic, merged) · `paper_wrap` paper wrap (boiled herbs) · `bag` bag (subclasses: `medicine_bag` blue medicine bag · `supplement_bag` supplement bag) · `spray_bottle` spray bottle · `box` box · `tote_bag` tote bag · `tin` inhaler tin · subclasses are product data only, the model is trained on the main class · **≤ 2,500 training images** (start with 50–100, then add) · shot in the MBK room's real light
 - **Accuracy (✅ defined by ณัฑฒ์ 6/10):** compare box by box with **IoU** (overlap area ÷ union area) — a predicted box overlapping a real one with **IoU ≥ 50% and the right class = TP** · IoU < 50% or wrong class = **FP** · a real object the model missed = **FN** → precision = TP/(TP+FP) · recall = TP/(TP+FN) · **target: mAP@50 ≥ 80%** on the test split (Roboflow reports it) · counting needs both precision (FP = over-count) and recall (FN = under-count)
 - Compare per slot, per class: ⚠️ flag when `|cv − entered| > max(1, 10%)` · no model / API down / no photo → saved normally, status "not checked"
 - Heavily stacked items (books, pouches in baskets) → CV can be switched off per slot
@@ -190,9 +190,9 @@ Prices from each vendor's pricing page on 6/10/2026 (~36 THB/USD — approximate
 ## ✅ Answered
 - Branch = MBK (the 28/9 sheet is the MBK stock) · permission to put up QR codes: **not needed** · LINE OA: **ณัฑฒ์'s own account** · deploy: **Railway** · data: **≤ 5 countries** (Singapore is fine) · **budget = system cost ≤ 3,000 THB/month** (6/10) · **one QR per storey** (6/10) — if a storey ever holds several positions (L0301, L0302), decide then between one QR for the whole storey or one per position
 
-## ❓ Open questions (6/10 round 2 · original numbers)
-2. **2-year rule — how to record dates** (pick one): **A) recommended** a per-product "oldest lot date" (the date written on the bag, e.g. 17/6/69), entered only when a new lot arrives → the system warns 🟡 at 21 months and 🔴 at 2 years · **B)** track every lot (quantity + date): more precise, much more typing · **C)** pull receiving dates from the existing stock system (if it can export them)
-3. **Slot code direction** (ณัฑฒ์ forgot — Claude checked the data): `L0301` holds the boiled herbs, which the photos show on the **top level** of the left steel rack · `R0301` holds KOVIA/QUARTO/PANDORA, whose labels the photos show on the **top row** of the white cabinet → probably 03 = top, **01 = bottom**, matching the minimap · please confirm
+## ❓ Open questions (6/10 round 3 · original numbers)
+2. **2-year shelf life — how to record lot dates** (pick one): **A) recommended** a per-product "oldest lot date" (the date written on the bag, e.g. 17/6/69), entered only when a new lot arrives → warns 🟡 3 months before and 🔴 at 2 years · **B)** track every lot (quantity + date): more precise, much more typing · **C)** pull receiving dates from the existing stock system (if it can export them)
+3. **Slot code direction:** the data suggests 03 = top, **01 = bottom** — please confirm (the map page now explains how to read a code)
 4. **40 products to check without a slot yet** → fill in `data/layout_mbk.csv`
 5. **Voice:** tap 🎤 once on the phone — does it work?
-8. **Class per product (Claude's guess)** in `data/layout_mbk.csv`: tea + collagen bags = plastic medicine bag · boiled herbs = paper medicine bag · MALA = inhaler tin (box sets = box) · liquids/powders/pills/pellets/bottled supplements = plastic medicine bottle · พัทธะ (set) = tote bag · books = no class — correct? Should **books** be counted by CV too?
+8. **Class per product (Claude's guess)** in `data/layout_mbk.csv`: tea = bag/medicine_bag · ROZY/CELEB Bag = bag/supplement_bag · boiled herbs = paper_wrap · powders/pills/pellets/capsule supplements = jar · knee spray = spray_bottle · MALA = tin (box sets = box) · Touch Up/Tidy/mexo = box · พัทธะ = tote_bag · books = book — correct? · Which class for **CABA and banana juice** (plain liquid bottles)?
