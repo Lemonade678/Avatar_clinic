@@ -1,5 +1,6 @@
   const EN_TO_TH = {{ en_to_th|tojson }};
   const TH_TO_EN = {{ th_to_en|tojson }};
+  const THAI = new RegExp("[" + String.fromCharCode(0x0E00) + "-" + String.fromCharCode(0x0E7F) + "]");  // Thai Unicode block
   // same rule as stockcount/keyboard.py: convert word by word, never touch plain numbers
   function convert(text, table, needs) {
     return text.split(/(\s+)/).map(t =>
@@ -20,7 +21,7 @@
       if (!raw) return;
       let found = hits(raw);
       if (!found.length) {
-        for (const alt of [convert(raw, EN_TO_TH, /[a-z]/), convert(raw, TH_TO_EN, /[฀-๿]/)]) {
+        for (const alt of [convert(raw, EN_TO_TH, /[a-z]/), convert(raw, TH_TO_EN, THAI)]) {
           if (alt !== raw && hits(alt).length) {
             found = hits(alt);
             hint.textContent = "ค้นหาเป็น: " + alt;

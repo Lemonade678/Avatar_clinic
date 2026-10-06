@@ -21,12 +21,12 @@ def test_roboflow_sends_base64_and_reads_predictions():
         seen["url"] = request.url
         seen["body"] = request.content
         return httpx.Response(200, json={"predictions": [
-            {"x": 1, "y": 2, "width": 3, "height": 4, "class": "bottle", "confidence": 0.93},
-            {"x": 5, "y": 6, "width": 7, "height": 8, "class": "pouch", "confidence": 0.41},
+            {"x": 1, "y": 2, "width": 3, "height": 4, "class": "plastic_bottle", "confidence": 0.93},
+            {"x": 5, "y": 6, "width": 7, "height": 8, "class": "plastic_bag", "confidence": 0.41},
         ]})
 
     preds = roboflow(handler).predict(b"\xff\xd8jpeg")
-    assert preds == [{"class": "bottle", "confidence": 0.93}, {"class": "pouch", "confidence": 0.41}]
+    assert preds == [{"class": "plastic_bottle", "confidence": 0.93}, {"class": "plastic_bag", "confidence": 0.41}]
     assert seen["url"].path == "/stock-count-packaging/1"
     assert seen["url"].params["api_key"] == KEY
     assert seen["body"] == base64.b64encode(b"\xff\xd8jpeg")

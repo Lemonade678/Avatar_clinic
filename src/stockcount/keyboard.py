@@ -33,13 +33,13 @@ TH_TO_EN: dict[str, str] = {th: en for en, th in _KEY_PAIRS if not th.isascii()}
 
 # count units staff may type after a number, in both languages
 UNITS = (
-    "ขวด", "ซอง", "ถุง", "กล่อง", "เล่ม", "ชิ้น", "แพ็ค", "กระปุก",
-    "bottle", "pouch", "bag", "box", "book", "pack", "package", "pcs", "jar",
+    "ขวด", "ซอง", "ถุง", "กล่อง", "เล่ม", "ชิ้น", "แพ็ค", "กระปุก", "กระป๋อง", "ถุงผ้า",
+    "bottle", "pouch", "bag", "box", "book", "pack", "package", "pcs", "jar", "tin", "can", "tote",
 )
 
 _SPLIT_RE = re.compile(r"(\s+)")
 _ASCII_LETTER_RE = re.compile(r"[A-Za-z]")
-_THAI_RE = re.compile(r"[฀-๿]")
+_THAI_RE = re.compile("[" + chr(0x0E00) + "-" + chr(0x0E7F) + "]")  # the Thai Unicode block
 
 
 def _convert(text: str, table: dict[str, str], needs: re.Pattern) -> str:

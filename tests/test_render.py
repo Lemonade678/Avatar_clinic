@@ -32,3 +32,9 @@ def test_unplaced_products_are_listed():
 def test_keyboard_tables_are_embedded_for_search():
     html = page()
     assert "const EN_TO_TH" in html and "const TH_TO_EN" in html
+
+
+def test_map_explains_how_to_read_a_slot_code():
+    # ณัฑฒ์ forgot the code after a 4-day break — the page should remind instead of memory
+    html = page()
+    assert "อ่านรหัสช่อง" in html and "นับจากล่าง" in html and "นับจากซ้าย" in html

@@ -25,12 +25,12 @@ def test_builds_rows_for_every_table():
     seed = build_seed(
         [row("S1", 3, 4), row("S2")],
         [place("S1", "L0301"), place("S2", "L0301")],
-        {"S1": "bottle"},
+        {"S1": "plastic_bottle"},
         DAY,
         CvConfig(disabled_locations=frozenset({"L0301"})),
     )
     assert seed.products == [
-        {"sku": "S1", "name": "name-S1", "category": "cat", "packaging": "bottle"},
+        {"sku": "S1", "name": "name-S1", "category": "cat", "packaging": "plastic_bottle"},
         {"sku": "S2", "name": "name-S2", "category": "cat", "packaging": None},
     ]
     assert seed.locations == [

@@ -14,3 +14,18 @@ def test_migration_is_valid_postgres_sql(path):
 def test_migrations_run_in_name_order():
     names = [p.name for p in MIGRATIONS]
     assert names == sorted(names) and len(names) >= 2
+
+
+def test_database_packaging_classes_match_the_code():
+    # the newest CHECK on products.packaging must list exactly layout.PACKAGING, or imports would fail
+    import re
+
+    from stockcount.layout import PACKAGING
+
+    checks = [
+        m.group(1)
+        for p in MIGRATIONS
+        for m in re.finditer(r"check \(packaging in \(([^)]*)\)\)", p.read_text(encoding="utf-8"))
+    ]
+    assert checks, "no packaging CHECK found"
+    assert tuple(re.findall(r"'([a-z_]+)'", checks[-1])) == PACKAGING

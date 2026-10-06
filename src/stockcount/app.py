@@ -21,7 +21,10 @@ from .report import week_bounds, week_of
 from .service import CountError, CountingService, SessionClosed, SlotNotFound
 
 STATIC_DIR = Path(__file__).parent / "static"
-PACKAGING_TH = {"bottle": "ขวด/กระปุก", "pouch": "ซอง", "bag": "ถุง", "box": "กล่อง", "book": "หนังสือ"}
+PACKAGING_TH = {
+    "paper_bag": "ถุงยากระดาษ", "plastic_bag": "ถุงยาพลาสติก", "plastic_bottle": "ขวดยาพลาสติก",
+    "box": "กล่อง", "tote_bag": "ถุงผ้า (tote bag)", "tin": "กระป๋องยาดม",
+}
 
 log = logging.getLogger(__name__)
 

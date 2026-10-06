@@ -68,7 +68,7 @@ def test_photos_and_report_inputs():
 def test_from_files_loads_the_repo_data():
     r = InMemoryRepo.from_files(ROOT / "data" / "stock_2026-09-28.csv", ROOT / "data" / "layout_mbk.csv", date(2026, 9, 28))
     assert len(r.products()) == 105
-    assert r.products()["HB0001"].packaging == "bottle"
+    assert r.products()["HB0001"].packaging == "plastic_bottle"
     assert len(r.placements()) == 27
     as_of, front = r.stock()
     assert as_of == date(2026, 9, 28) and front["NA0032"] == -9

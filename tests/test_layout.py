@@ -61,8 +61,8 @@ def test_repo_layout_file():
 
 
 def test_packaging_is_read_for_every_row_placed_or_not(tmp_path):
-    p = write(tmp_path, "sku,location,packaging\nHB0001,R0101,bottle\nHB0007,,POUCH\nHB0003,,\n")
-    assert load_packaging_csv(p) == {"HB0001": "bottle", "HB0007": "pouch"}
+    p = write(tmp_path, "sku,location,packaging\nHB0001,R0101,plastic_bottle\nHB0007,,PLASTIC_BAG\nHB0003,,\n")
+    assert load_packaging_csv(p) == {"HB0001": "plastic_bottle", "HB0007": "plastic_bag"}
 
 
 def test_unknown_packaging_is_rejected(tmp_path):
@@ -76,7 +76,13 @@ def test_packaging_column_is_optional(tmp_path):
     assert load_packaging_csv(p) == {}
 
 
-def test_repo_layout_has_packaging_for_all_105():
+def test_packaging_classes_are_the_six_objects_from_the_shop():
+    # ณัฑฒ์ 6/10: paper medicine bag, plastic medicine bag, plastic bottle, box, tote bag, inhaler tin
+    assert PACKAGING == ("paper_bag", "plastic_bag", "plastic_bottle", "box", "tote_bag", "tin")
+
+
+def test_repo_layout_has_packaging_for_everything_but_books():
     packaging = load_packaging_csv(REPO_LAYOUT)
-    assert len(packaging) == 105
     assert set(packaging.values()) <= set(PACKAGING)
+    assert len(packaging) == 99  # the 6 books (BK…) have no CV class yet
+    assert not any(sku.startswith("BK") for sku in packaging)

@@ -13,12 +13,12 @@ from stockcount.service import CountError, CountingService, SessionClosed, SlotN
 
 UTC = timezone.utc
 PRODUCTS = {
-    "A": Product("A", "อุระกาวาท", "ผง", "bottle"),
-    "B": Product("B", "อโธ", "ผง", "bottle"),
-    "C": Product("C", "อังมะ", "ผง", "bottle"),
-    "D": Product("D", "มัตถะ", "ผง", "bottle"),
-    "E": Product("E", "แพนดอร่าทู", "อาหารเสริม", "bottle"),
-    "F": Product("F", "ยาธาตุ", "ชง", "pouch"),
+    "A": Product("A", "อุระกาวาท", "ผง", "plastic_bottle"),
+    "B": Product("B", "อโธ", "ผง", "plastic_bottle"),
+    "C": Product("C", "อังมะ", "ผง", "plastic_bottle"),
+    "D": Product("D", "มัตถะ", "ผง", "plastic_bottle"),
+    "E": Product("E", "แพนดอร่าทู", "อาหารเสริม", "plastic_bottle"),
+    "F": Product("F", "ยาธาตุ", "ชง", "plastic_bag"),
 }
 FRONT = {"A": 9, "B": 9, "C": 11, "D": 0, "E": -9, "F": 12}
 
@@ -49,7 +49,7 @@ class FakeCv:
         self.calls += 1
         if self.fail:
             raise CvUnavailable("timeout")
-        return [{"class": "bottle", "confidence": 0.9}] * self.bottles + [{"class": "pouch", "confidence": 0.9}] * self.pouches
+        return [{"class": "plastic_bottle", "confidence": 0.9}] * self.bottles + [{"class": "plastic_bag", "confidence": 0.9}] * self.pouches
 
 
 class FakeNotifier:
@@ -128,7 +128,7 @@ def test_photo_within_tolerance_is_ok():
     result = svc.save_slot("R0101", "U1", {"A": "9", "B": "9"}, photo=jpeg())
     assert result.cv.status == "ok"
     [photo] = repo.photos(repo.session_for(date(2026, 10, 1)).id)
-    assert photo.human_counts == {"bottle": 18} and photo.cv_counts == {"bottle": 17}
+    assert photo.human_counts == {"plastic_bottle": 18} and photo.cv_counts == {"plastic_bottle": 17}
 
 
 def test_photo_far_off_is_flagged():

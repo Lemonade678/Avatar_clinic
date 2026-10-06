@@ -11,8 +11,9 @@ from .location import Location, parse_location
 # headers are matched loosely so ณัฑฒ์'s own sheet export ("MBK  directory", "Postion") also loads
 LOCATION_HEADERS = {"location", "mbk directory", "directory"}
 SHELF_HEADERS = {"shelf", "postion"}
-# the classes the small CV model knows; every product is one of these
-PACKAGING = ("bottle", "pouch", "bag", "box", "book")
+# what the small CV model can see on a shelf (ณัฑฒ์, 6/10): paper medicine bag, plastic medicine bag,
+# plastic bottle, box, tote bag, inhaler tin — a product with no class is simply not cross-checked
+PACKAGING = ("paper_bag", "plastic_bag", "plastic_bottle", "box", "tote_bag", "tin")
 
 
 class LayoutError(ValueError):
