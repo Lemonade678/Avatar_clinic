@@ -43,7 +43,7 @@ service branches: Stock-count-fork  ← stock count (forked from main · deploye
 ## Why this shape (options considered)
 | Option | Pros | Cons | Result |
 |---|---|---|---|
-| **A. main = hub + tools + analytics · deployable services on branches** | Matches ณัฑฒ์'s description · main stays easy to read · services deploy independently | A service branch has to merge main now and then to pick up shared changes | ✅ chosen |
+| **A. main = hub + tools + analytics · deployable services on branches** | Matches ณัฑฒ์'s description · main stays easy to read · services deploy independently | Both sides own the root files (README, CI) → service branches **do not merge main**; a shared change is copied in through a small PR | ✅ chosen |
 | B. Everything in main (`services/stock-count/`) | One place · one PR shows everything | Moves stock count's CI / Railway / Supabase paths in the middle of the pilot | Reconsider after the pilot |
 | C. A + a shared core library | Reuse | Only one consumer (YAGNI) · not picked by ณัฑฒ์ | ❌ for now |
 

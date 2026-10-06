@@ -10,7 +10,7 @@ How we work in the Avatar Clinic repository. Short on purpose: if a rule is miss
 | `feat/…` `fix/…` `docs/…` `chore/…` | One focused change | the branch it started from |
 
 - A new service gets its own branch forked from `main`, plus one row in the **Services** table of the front README.
-- Service branches merge `main` now and then to pick up shared changes (`git merge origin/main`).
+- Service branches keep their own root files (README, CI, `.gitignore`) and **do not merge `main`**: both sides own those files, so a merge would collide. To adopt a shared change, copy it into the service in a small PR. Moving services into `services/<name>/` on `main` is the long-term option once the pilots settle.
 - Never force-push a shared branch. If a push is rejected, fetch and integrate first.
 
 ## Commits
