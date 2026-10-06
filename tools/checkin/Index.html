@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4ef; --card: #ffffff; --ink: #1c1c1a; --muted: #6a6963; --line: #e3e1da;
+    --in: #1f7a4d; --in-soft: #e8f3ed; --out: #b3402a; --out-soft: #f8ebe7;
+    --warn: #8a5a00; --warn-soft: #fbf1dc; --bar: #1f7a4d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131312; --card: #1d1d1b; --ink: #ecebe5; --muted: #a09f98; --line: #33322e;
+      --in: #4cbc84; --in-soft: #182a20; --out: #ec8b75; --out-soft: #2e1d18;
+      --warn: #e6b54f; --warn-soft: #2d2412; --bar: #4cbc84;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 'IBM Plex Sans Thai', system-ui, sans-serif; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 20px; margin: 0; font-weight: 600; }
+  .clock { font-family: 'IBM Plex Mono', monospace; color: var(--muted); }
+  nav { display: flex; gap: 4px; margin: 16px 0; border-bottom: 1px solid var(--line); }
+  nav button { background: none; border: 0; padding: 8px 14px; font: inherit; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  nav button[aria-selected="true"] { color: var(--ink); border-color: var(--ink); font-weight: 500; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+  .status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+  .status.working .dot { background: var(--in); box-shadow: 0 0 0 4px var(--in-soft); }
+  .elapsed { font-family: 'IBM Plex Mono', monospace; font-size: 28px; margin-left: auto; }
+  label { display: block; font-weight: 500; margin: 12px 0 4px; }
+  label small { font-weight: 400; color: var(--muted); }
+  textarea, input, select { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  textarea { min-height: 64px; resize: vertical; }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--in); outline-offset: -1px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 16px; padding: 12px; border: 0; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer; color: #fff; }
+  .btn.in { background: var(--in); } .btn.out { background: var(--out); }
+  @media (prefers-color-scheme: dark) { .btn { color: #111; } }
+  .btn:disabled { opacity: .55; cursor: progress; }
+  .btn.ghost { background: none; color: var(--ink); border: 1px solid var(--line); width: auto; margin: 0; padding: 8px 12px; font-weight: 500; }
+  .check { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-weight: 400; }
+  .check input { width: auto; }
+  .notice { padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
+  .notice.ok { background: var(--in-soft); color: var(--in); }
+  .notice.err { background: var(--out-soft); color: var(--out); }
+  .notice.warn { background: var(--warn-soft); color: var(--warn); }
+  .muted { color: var(--muted); }
+  .hidden { display: none !important; }
+  .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .toolbar select { width: auto; }
+  .toolbar .spacer { flex: 1; }
+  .toolbar a { color: var(--ink); }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 560px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .tile .v { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .tile .k { color: var(--muted); font-size: 13px; }
+  .chart { display: flex; align-items: flex-end; gap: 2px; height: 120px; padding-top: 8px; }
+  .chart .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+  .chart .b { background: var(--bar); border-radius: 3px 3px 0 0; min-height: 0; }
+  .chart .b.zero { background: var(--line); height: 2px; }
+  .axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tag { display: inline-block; font-size: 12px; padding: 0 6px; border-radius: 6px; background: var(--warn-soft); color: var(--warn); margin-right: 4px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>เช็คชื่อ Part-time</h1>
+    <span class="clock" id="clock"></span>
+  </header>
+
+  <nav role="tablist">
+    <button role="tab" aria-selected="true" data-tab="today">วันนี้</button>
+    <button role="tab" aria-selected="false" data-tab="hist">ประวัติ</button>
+  </nav>
+
+  <div id="notice" class="notice hidden"></div>
+
+  <!-- ===== วันนี้ ===== -->
+  <section id="tab-today">
+    <div id="slackWarn" class="notice warn hidden">ยังไม่ได้ตั้งค่า SLACK_WEBHOOK_URL — ข้อมูลจะบันทึกลง Sheet แต่ยังไม่โพสต์ลง Slack</div>
+
+    <div class="card status" id="statusCard">
+      <span class="dot"></span>
+      <div>
+        <div id="statusText">กำลังโหลด…</div>
+        <div class="muted" id="statusSub"></div>
+      </div>
+      <span class="elapsed" id="elapsed"></span>
+    </div>
+
+    <form class="card hidden" id="inForm">
+      <label for="yesterday">เมื่อวานทำอะไร</label>
+      <textarea id="yesterday" name="yesterday"></textarea>
+      <label for="today">วันนี้จะทำอะไร <small>(จำเป็น)</small></label>
+      <textarea id="today" name="today" required></textarea>
+      <label for="blockers">ติดปัญหาอะไรไหม</label>
+      <textarea id="blockers" name="blockers" placeholder="ไม่มีก็เว้นว่างได้"></textarea>
+      <button class="btn in" type="submit">🟢 เช็คอิน &amp; โพสต์ scrum</button>
+    </form>
+
+    <form class="card hidden" id="outForm">
+      <div class="muted" id="planRecap"></div>
+      <label for="done">วันนี้ทำอะไรเสร็จ</label>
+      <textarea id="done" name="done"></textarea>
+      <label class="check"><input type="checkbox" id="forgot"> ลืมเช็คเอาท์ — ใส่เวลาเลิกงานเอง</label>
+      <div id="manualWrap" class="hidden">
+        <input type="datetime-local" id="manualTime">
+        <div class="muted" style="font-size:13px;margin-top:4px">แถวนี้จะถูกติดธง “edited” ใน Sheet และแจ้งใน Slack</div>
+      </div>
+      <button class="btn out" type="submit">🔴 เช็คเอาท์</button>
+    </form>
+  </section>
+
+  <!-- ===== ประวัติ ===== -->
+  <section id="tab-hist" class="hidden">
+    <div class="toolbar">
+      <select id="monthSel" aria-label="เลือกเดือน"></select>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="csvBtn" type="button">⬇ CSV</button>
+      <a id="sheetLink" target="_blank" rel="noopener">เปิด Google Sheet ↗</a>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><div class="v" id="tWeek">–</div><div class="k">ชม. สัปดาห์นี้</div></div>
+      <div class="tile"><div class="v" id="tMonth">–</div><div class="k">ชม. เดือนที่เลือก</div></div>
+      <div class="tile"><div class="v" id="tDays">–</div><div class="k">วันที่ทำงาน</div></div>
+      <div class="tile"><div class="v" id="tAvg">–</div><div class="k">ชม. เฉลี่ย / วัน</div></div>
+    </div>
+
+    <div class="card">
+      <div class="muted" style="font-size:13px">ชั่วโมงรายวัน</div>
+      <div class="chart" id="chart"></div>
+      <div class="axis" id="axis"></div>
+    </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>วันที่</th><th>เข้า</th><th>ออก</th><th>ชม.</th><th>วันนี้จะทำ</th><th>ทำเสร็จ</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="muted hidden" id="empty">ยังไม่มีข้อมูลในเดือนนี้</p>
+    </div>
+  </section>
+</div>
+
+<script>
+  const TZ = 'Asia/Bangkok';
+  const $ = id => document.getElementById(id);
+  let state = null, hist = null;
+
+  // ---------- เรียกฟังก์ชันฝั่ง Apps Script ----------
+  function call(fn, arg) {
+    return new Promise((resolve, reject) => {
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](arg);
+    });
+  }
+
+  // ---------- เวลา ----------
+  const dateStr = d => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d);
+  const timeStr = d => new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+  const localInput = d => dateStr(d) + 'T' + timeStr(d);
+  const pad = n => String(n).padStart(2, '0');
+  function mondayOf(s) {
+    const [y, m, d] = s.split('-').map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    dt.setUTCDate(dt.getUTCDate() - ((dt.getUTCDay() + 6) % 7));
+    return dt.toISOString().slice(0, 10);
+  }
+  const fmtH = h => (Math.round(h * 10) / 10).toLocaleString('th-TH', { maximumFractionDigits: 1 });
+  function fmtDuration(min) {
+    const h = Math.floor(min / 60), m = min % 60;
+    return h ? (m ? `${h} ชม. ${m} นาที` : `${h} ชม.`) : `${m} นาที`;
+  }
+  const MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+  function tickClock() {
+    const now = new Date();
+    $('clock').textContent = new Intl.DateTimeFormat('th-TH', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(now);
+    if (state && state.open) {
+      const s = Math.max(0, Math.floor((now - new Date(state.open.check_in)) / 1000));
+      $('elapsed').textContent = `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+    } else {
+      $('elapsed').textContent = '';
+    }
+  }
+
+  // ---------- แจ้งเตือน ----------
+  function notify(kind, text) {
+    const n = $('notice');
+    n.className = 'notice ' + kind;
+    n.textContent = text;
+    if (kind === 'ok') setTimeout(() => n.classList.add('hidden'), 6000);
+  }
+  const slackNote = s => s === 'ok' ? 'โพสต์ลง Slack แล้ว' : s.startsWith('skipped') ? 'ยังไม่ได้โพสต์ Slack (ไม่มี webhook)' : 'โพสต์ Slack ไม่สำเร็จ (' + s + ') — แต่บันทึกลง Sheet แล้ว';
+
+  // ---------- หน้า "วันนี้" ----------
+  function renderToday() {
+    $('slackWarn').classList.toggle('hidden', state.slackConfigured);
+    const open = state.open;
+    $('statusCard').classList.toggle('working', !!open);
+    $('inForm').classList.toggle('hidden', !!open);
+    $('outForm').classList.toggle('hidden', !open);
+    if (open) {
+      const inAt = new Date(open.check_in);
+      $('statusText').textContent = 'กำลังทำงาน';
+      $('statusSub').textContent = 'เข้างาน ' + timeStr(inAt) + ' น.' + (dateStr(inAt) !== dateStr(new Date()) ? ' (' + dateStr(inAt) + ')' : '');
+      $('planRecap').textContent = 'แผนวันนี้: ' + open.today;
+      $('manualTime').min = localInput(inAt);
+    } else {
+      $('statusText').textContent = 'ยังไม่ได้เช็คอิน';
+      $('statusSub').textContent = '';
+      if (!$('yesterday').value) $('yesterday').value = state.suggestYesterday;
+    }
+    $('sheetLink').href = state.sheetUrl;
+    tickClock();
+  }
+
+  async function loadState() {
+    try { state = await call('getState'); renderToday(); }
+    catch (e) { notify('err', 'โหลดไม่สำเร็จ: ' + e.message); }
+  }
+
+  async function submit(form, fn, payload, onOk) {
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try {
+      const res = await call(fn, payload);
+      onOk(res);
+      form.reset();
+      hist = null;
+      await loadState();
+    } catch (e) {
+      notify('err', e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  $('inForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target;
+    submit(f, 'checkIn', { yesterday: f.yesterday.value, today: f.today.value, blockers: f.blockers.value },
+      r => notify(r.slack === 'ok' ? 'ok' : 'warn', 'เช็คอินแล้ว · ' + slackNote(r.slack)));
+  });
+
+  $('outForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target;
+    const manual = $('forgot').checked ? $('manualTime').value : '';
+    if ($('forgot').checked && !manual) return notify('err', 'กรุณาใส่เวลาเลิกงาน');
+    submit(f, 'checkOut', { done: f.done.value, manualTime: manual }, r => {
+      $('manualWrap').classList.add('hidden');
+      notify(r.slack === 'ok' ? 'ok' : 'warn', 'เช็คเอาท์แล้ว · ทำงาน ' + fmtDuration(r.minutes) + ' · ' + slackNote(r.slack));
+    });
+  });
+
+  $('forgot').addEventListener('change', e => {
+    $('manualWrap').classList.toggle('hidden', !e.target.checked);
+    if (e.target.checked && !$('manualTime').value) $('manualTime').value = localInput(new Date());
+  });
+
+  // ---------- หน้า "ประวัติ" ----------
+  async function loadHistory() {
+    try {
+      hist = await call('getHistory');
+      const months = [...new Set(hist.map(r => r.date.slice(0, 7)))];
+      const cur = dateStr(new Date()).slice(0, 7);
+      if (!months.includes(cur)) months.push(cur);
+      months.sort().reverse();
+      const sel = $('monthSel'), prev = sel.value;
+      sel.innerHTML = '';
+      months.forEach(m => {
+        const [y, mo] = m.split('-').map(Number);
+        sel.add(new Option(MONTHS[mo - 1] + ' ' + y, m));
+      });
+      sel.value = months.includes(prev) ? prev : months[0];
+      renderHistory();
+    } catch (e) { notify('err', 'โหลดประวัติไม่สำเร็จ: ' + e.message); }
+  }
+
+  function renderHistory() {
+    const month = $('monthSel').value;
+    const closed = hist.filter(r => r.hours != null);
+    const wk = mondayOf(dateStr(new Date()));
+    const weekH = closed.filter(r => mondayOf(r.date) === wk).reduce((s, r) => s + r.hours, 0);
+    const inMonth = hist.filter(r => r.date.startsWith(month));
+    const byDay = {};
+    inMonth.forEach(r => { byDay[r.date] = (byDay[r.date] || 0) + (r.hours || 0); });
+    const monthH = Object.values(byDay).reduce((s, h) => s + h, 0);
+    const days = Object.keys(byDay).length;
+
+    $('tWeek').textContent = fmtH(weekH);
+    $('tMonth').textContent = fmtH(monthH);
+    $('tDays').textContent = days;
+    $('tAvg').textContent = days ? fmtH(monthH / days) : '–';
+
+    // กราฟแท่งรายวัน
+    const [y, m] = month.split('-').map(Number);
+    const nDays = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const max = Math.max(8, ...Object.values(byDay));
+    const chart = $('chart');
+    chart.innerHTML = '';
+    for (let d = 1; d <= nDays; d++) {
+      const key = `${month}-${pad(d)}`, h = byDay[key] || 0;
+      const col = document.createElement('div');
+      col.className = 'col';
+      col.title = `${d} ${MONTHS[m - 1]}: ${fmtH(h)} ชม.`;
+      const b = document.createElement('div');
+      b.className = 'b' + (h ? '' : ' zero');
+      if (h) b.style.height = (h / max * 100) + '%';
+      col.appendChild(b);
+      chart.appendChild(col);
+    }
+    $('axis').innerHTML = `<span>1</span><span>${Math.ceil(nDays / 2)}</span><span>${nDays}</span>`;
+
+    // ตาราง (ใหม่ → เก่า)
+    const tbody = $('rows');
+    tbody.innerHTML = '';
+    inMonth.slice().reverse().forEach(r => {
+      const tr = document.createElement('tr');
+      const cells = [
+        r.date.slice(8) + ' ' + MONTHS[m - 1],
+        r.check_in ? timeStr(new Date(r.check_in)) : '',
+        r.check_out ? timeStr(new Date(r.check_out)) : '⏳',
+        r.hours != null ? fmtH(r.hours) : '',
+        r.today, r.done,
+      ];
+      cells.forEach((c, i) => {
+        const td = document.createElement('td');
+        td.textContent = c;
+        if (i < 4) td.className = 'num';
+        tr.appendChild(td);
+      });
+      const flags = document.createElement('td');
+      if (r.edited) flags.insertAdjacentHTML('beforeend', '<span class="tag" title="ใส่เวลาเลิกงานย้อนหลัง">edited</span>');
+      if ((r.slack_in && r.slack_in !== 'ok') || (r.slack_out && r.slack_out !== 'ok')) flags.insertAdjacentHTML('beforeend', '<span class="tag" title="โพสต์ Slack ไม่สำเร็จ">slack ✗</span>');
+      tr.appendChild(flags);
+      tbody.appendChild(tr);
+    });
+    $('empty').classList.toggle('hidden', inMonth.length > 0);
+  }
+
+  $('monthSel').addEventListener('change', renderHistory);
+
+  $('csvBtn').addEventListener('click', () => {
+    const cols = ['session_id', 'date', 'check_in', 'check_out', 'hours', 'yesterday', 'today', 'blockers', 'done', 'edited', 'slack_in', 'slack_out'];
+    const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const lines = [cols.join(',')].concat(hist.map(r => cols.map(c => {
+      if ((c === 'check_in' || c === 'check_out') && r[c]) return esc(dateStr(new Date(r[c])) + ' ' + timeStr(new Date(r[c])));
+      return esc(r[c]);
+    }).join(',')));
+    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'attendance-' + dateStr(new Date()) + '.csv';
+    a.click();
+  });
+
+  // ---------- แท็บ ----------
+  document.querySelectorAll('nav button').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-selected', b === btn));
+    const tab = btn.dataset.tab;
+    $('tab-today').classList.toggle('hidden', tab !== 'today');
+    $('tab-hist').classList.toggle('hidden', tab !== 'hist');
+    if (tab === 'hist' && !hist) loadHistory();
+    else if (tab === 'hist') renderHistory();
+  }));
+
+  loadState();
+  setInterval(tickClock, 1000);
+</script>
+</body>
+</html>
