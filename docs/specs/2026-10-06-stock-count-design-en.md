@@ -35,7 +35,7 @@ A **minimap** (a floor plan like a Siam Paragon mall directory) doubles as the S
 | **Budget ≤ 3,000 THB/month** (system cost · ✅ answered 6/10) | Free tiers wherever possible: Supabase free · Roboflow free/starter · smallest Railway plan · no extra hardware in phase 1 |
 | **At most 1 month to implement for real** | Cut scope to an MVP · anything that doesn't fit (e.g. voice) becomes an optional task at the end of the plan |
 | **Data may pass through at most 5 countries** (was "must not leave the country" → relaxed by ณัฑฒ์ to ≤ 5 countries on 30/9) | Currently 4 countries — see "Where the data goes" |
-| **Ministry rule: "lasts 2 years"** (❓ question 2) | If it means keep records for 2 years → retain counts/snapshots/photos ≥ 2 years · if it means product shelf life is 2 years → track manufacture/expiry dates |
+| **Ministry rule: products may stay in stock for at most 2 years** (✅ answered 6/10 · dried herbs have no expiry, the limit is for safety and hygiene) | We need to know when each lot entered stock and warn before 2 years → ❓ question 2 picks how to record dates · meanwhile nothing is deleted automatically |
 | **Low light** — small room, 1–2 lamps, some dark corners | The photo screen has a torch button · train on photos taken in this room's real light · flag "too dark" when brightness is low |
 | **Trade secrets** | Private repo · RLS on every table · private photo bucket · no public web pages |
 
@@ -46,7 +46,7 @@ A **minimap** (a floor plan like a Siam Paragon mall directory) doubles as the S
 | **Check only the "front store" (หน้าร้าน) quantity from the sheet** (> 0 = check · 0 = not stocked, skip · negative = the system record is wrong) | The "back store" (หลังร้าน) quantity (later) |
 | UI pages inside LINE (LIFF) rendered as HTML by FastAPI · minimap | A separate mobile app |
 | One QR **per storey** (✅ 6/10) — at MBK every storey has one slot (position 01), so this equals one per slot, e.g. `L0301` · scanned inside the page, front or back camera selectable | One QR per product |
-| CV counts per **packaging type** (bottle/pouch/bag/box/book) | Per-SKU CV (phase 2) |
+| CV counts per **object type, 6 classes** (paper medicine bag · plastic medicine bag · plastic medicine bottle · box · tote bag · inhaler tin) | Per-SKU CV (phase 2) |
 | Search/input that **repairs a forgotten keyboard switch** Thai↔English (✅ built) · voice input Thai/English | — |
 | Starting stock from the 28/9/2026 sheet (105 products · printed header says "สาขาลาดพร้าว" but it is the MBK stock) | Automatic link to the existing stock system |
 | Weekly report (estimated from stock decreases) | Real sales from the POS |
@@ -120,16 +120,20 @@ flowchart LR
 - Fallback: tapping the slot on the minimap always works, no scan needed
 - ⚠️ Not verified yet that LINE's in-app browser can open the camera from a web page on ณัฑฒ์'s phone → the first step of the scanner task tests exactly that
 
-## Voice input, Thai/English (added 30/9)
-- 🎤 button on the slot page → say e.g. "อุระกาวาท เก้า" / "mala two" → speech to text → match product + number (Thai and English number words) → fills the field, the counter confirms
-- ❓ Question 5: which speech-to-text engine (browser / API service) and whether it belongs in the first month
+## Voice input, Thai/English (added 30/9 · ✅ built · to be tried on a real phone)
+- **How it works:** on the slot page tap 🎤 → say "อุระกาวาท เก้า" (switch language with the ไทย/EN button) → the **browser's own speech-to-text** turns it into text → our server finds product names **of that slot only** + numbers (digits · Thai digits · words like "เก้า"/"nine") → fills the inputs → **the counter checks and taps save** (nothing is saved automatically)
+- **Where the audio goes:** never through our server · the browser sends it to its vendor's speech service (Android/Chrome = Google 🇺🇸, within the same 4 countries) · our server only receives text
+- **Limits:** some LINE in-app browsers have no speech recognition → the 🎤 button hides itself · unusual herb names may be misheard → check before saving
+- **Why it is only a helper:** inputs are pre-filled with the system value, so when the stock matches nothing needs to be said or typed · voice helps when both hands are busy
+- ❓ Question 5: tap 🎤 once on the real phone — if there is no button, skip voice for the pilot
 
 ## Forgotten keyboard switch (added · ✅ built 30/9)
 - Typing `v6itdk;km 2 -;f` is understood as `อุระกาวาท 2 ขวด` · typing `ทฟสฟ 2 ยฟแาฟเำ` → `mala 2 package` (Kedmanee layout)
 - Only words that become a known product name/unit are converted · number-only words are never touched · used by both search and input
 
 ## CV cross-check (small model)
-- Roboflow object detection with classes `bottle`, `pouch`, `bag`, `box`, `book` · **≤ 2,500 training images** (start with 50–100, then add) · shot in the MBK room's real light
+- Roboflow object detection, **6 classes** (✅ 6/10): `paper_bag` paper medicine bag · `plastic_bag` plastic medicine bag · `plastic_bottle` plastic medicine bottle · `box` box · `tote_bag` tote bag · `tin` inhaler tin · **≤ 2,500 training images** (start with 50–100, then add) · shot in the MBK room's real light · books have no class yet (not cross-checked)
+- **Accuracy (✅ defined by ณัฑฒ์ 6/10):** compare box by box with **IoU** (overlap area ÷ union area) — a predicted box overlapping a real one with **IoU ≥ 50% and the right class = TP** · IoU < 50% or wrong class = **FP** · a real object the model missed = **FN** → precision = TP/(TP+FP) · recall = TP/(TP+FN) · **target: mAP@50 ≥ 80%** on the test split (Roboflow reports it) · counting needs both precision (FP = over-count) and recall (FN = under-count)
 - Compare per slot, per class: ⚠️ flag when `|cv − entered| > max(1, 10%)` · no model / API down / no photo → saved normally, status "not checked"
 - Heavily stacked items (books, pouches in baskets) → CV can be switched off per slot
 
@@ -186,10 +190,9 @@ Prices from each vendor's pricing page on 6/10/2026 (~36 THB/USD — approximate
 ## ✅ Answered
 - Branch = MBK (the 28/9 sheet is the MBK stock) · permission to put up QR codes: **not needed** · LINE OA: **ณัฑฒ์'s own account** · deploy: **Railway** · data: **≤ 5 countries** (Singapore is fine) · **budget = system cost ≤ 3,000 THB/month** (6/10) · **one QR per storey** (6/10) — if a storey ever holds several positions (L0301, L0302), decide then between one QR for the whole storey or one per position
 
-## ❓ Open questions (original numbers · 1 and 7 answered)
-2. **Ministry "lasts 2 years"** — keep stock history for 2 years, or products have a 2-year shelf life (expiry tracking needed)?
-3. **Slot code direction:** storey 01 = bottom? position 01 = leftmost when facing the shelf? (the minimap currently draws it that way)
-4. **40 products to check without a slot yet** → fill in `data/layout_mbk.csv` (the minimap lists them)
-5. **Voice input:** needed in the first month? OK for audio to go to a US service (within the same 4 countries)?
-6. **Accuracy > 80%** measured how: the model's mAP@0.5, or "% of slots where the CV count matches the human count"?
-8. **Packaging guessed by Claude** (`packaging` column in `data/layout_mbk.csv`: powder/pills/pellets = bottle · tea = pouch · boiled herbs = bag · books = book · boxes/gift sets = box) — correct?
+## ❓ Open questions (6/10 round 2 · original numbers)
+2. **2-year rule — how to record dates** (pick one): **A) recommended** a per-product "oldest lot date" (the date written on the bag, e.g. 17/6/69), entered only when a new lot arrives → the system warns 🟡 at 21 months and 🔴 at 2 years · **B)** track every lot (quantity + date): more precise, much more typing · **C)** pull receiving dates from the existing stock system (if it can export them)
+3. **Slot code direction** (ณัฑฒ์ forgot — Claude checked the data): `L0301` holds the boiled herbs, which the photos show on the **top level** of the left steel rack · `R0301` holds KOVIA/QUARTO/PANDORA, whose labels the photos show on the **top row** of the white cabinet → probably 03 = top, **01 = bottom**, matching the minimap · please confirm
+4. **40 products to check without a slot yet** → fill in `data/layout_mbk.csv`
+5. **Voice:** tap 🎤 once on the phone — does it work?
+8. **Class per product (Claude's guess)** in `data/layout_mbk.csv`: tea + collagen bags = plastic medicine bag · boiled herbs = paper medicine bag · MALA = inhaler tin (box sets = box) · liquids/powders/pills/pellets/bottled supplements = plastic medicine bottle · พัทธะ (set) = tote bag · books = no class — correct? Should **books** be counted by CV too?
