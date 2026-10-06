@@ -100,3 +100,11 @@ Scaffold + config loader · CSV loader with sum check · 105-product sheet · sc
 🎯 **EN:** everything ณัฑฒ์ needs to run the pilot: Railway start command, guides, to-dos, session log. **TH:** ของที่ต้องใช้ตอนขึ้นระบบจริง + คู่มือทีละขั้น
 - Files: `Procfile`, `.env.example`, `Guides/guide-setup-stock-count-app.md`, vault notes
 - Done when: full test suite passes, guide covers LINE LIFF + Railway + printing QR
+
+---
+
+### Follow-up 6/10 — photo shrinking ✅
+🎯 **EN:** keep ~2 years of photos inside Supabase's free 1 GB (budget answered: system cost ≤ 3,000 THB/month). **TH:** ย่อรูปก่อนเก็บ ให้ที่เก็บฟรีพอใช้ ~2 ปี
+- `photo.shrink()` (≤ 1280 px, JPEG q80, EXIF orientation applied, EXIF/GPS dropped) used by `service.save_slot` before storage and CV · tests 196/196
+- Budget table and answers: [[2026-10-06-stock-count-design]]
+
