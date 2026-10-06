@@ -1,0 +1,9 @@
+# code that runs on Linux (GitHub Actions) or in Google Apps Script keeps LF line endings
+* text=auto
+*.py text eol=lf
+*.js text eol=lf
+*.gs text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.sh text eol=lf
