@@ -15,7 +15,7 @@ report against the system stock, and a weekly report ranks the fastest-moving pr
 - **QR per shelf** — opens the slot inside LINE (LIFF); the in-page scanner works with the front camera and reads mirrored or colour-inverted codes
 - **Fast entry** — quantities pre-filled with the system value, all-or-nothing save per slot, automatic jump to the next slot
 - **Input that forgives** — Thai digits, Thai/English number words, voice input, and text typed on the wrong keyboard layout (Kedmanee ↔ QWERTY)
-- **CV cross-check** — a Roboflow model counts six packaging classes per photo; a slot is flagged when the count differs by more than max(1, 10%)
+- **CV cross-check** — a Roboflow model counts eight packaging classes per photo (book, jar, paper wrap, bag, spray bottle, box, tote bag, inhaler tin); a slot is flagged when the count differs by more than max(1, 10%)
 - **Shift summary & weekly report** — time per round, uncounted slots, mismatches, CV flags, top-3 fast movers; summary pushed to LINE
 - **Fails soft** — if the model, LINE or the network is down, counts are still saved
 
@@ -63,7 +63,7 @@ Then open http://localhost:8000. Setup guides for Supabase, LINE and Railway are
 | `supabase/migrations/` | database schema, applied by GitHub Actions |
 | `scripts/` | import, QR labels, minimap, smoke test, dev server |
 | `docs/` | dated design specs and implementation plans (Thai + English) |
-| `tests/` | 200 pytest tests |
+| `tests/` | 204 pytest tests |
 
 ## Credits
 Concept inspired by the warehouse stock-checking work of **Fling Asia (Fling.AI)**, extended here for a small retail back store.
