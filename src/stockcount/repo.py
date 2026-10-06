@@ -397,3 +397,15 @@ class SupabaseRepo:
     def receipts(self) -> list[Receipt]:
         rows = self._all(lambda: self.db.table("lot_dates").select("id,sku,lot_date,qty").eq("source", "receipt"), "id")
         return [Receipt(r["sku"], date.fromisoformat(r["lot_date"]), r["qty"]) for r in rows]
+
+    INSERT_BATCH = 500
+
+    def replace_receipts(self, receipts: list[Receipt]) -> None:
+        """Swap in a fresh export from the old stock system; dates typed on the lots page stay.
+
+        Not atomic: if an insert fails half way, run the import again.
+        """
+        self.db.table("lot_dates").delete().eq("source", "receipt").execute()
+        rows = [{"sku": r.sku, "lot_date": r.received.isoformat(), "source": "receipt", "qty": r.qty} for r in receipts]
+        for start in range(0, len(rows), self.INSERT_BATCH):
+            self.db.table("lot_dates").insert(rows[start : start + self.INSERT_BATCH]).execute()

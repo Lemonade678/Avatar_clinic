@@ -54,3 +54,23 @@ def test_receipts_read_past_the_1000_row_cap():
     repo = SupabaseRepo(FakeSupabase({"lot_dates": rows}))
     receipts = repo.receipts()
     assert len(receipts) == 2300 and receipts[0] == Receipt("P0000", date(2026, 6, 17), 2)
+
+
+def test_replacing_receipts_keeps_typed_dates():
+    db = FakeSupabase({"lot_dates": [
+        {"id": 1, "sku": "A", "lot_date": "2026-01-01", "source": "manual", "qty": None,
+         "recorded_at": "2026-10-01T03:00:00+00:00"},
+        {"id": 2, "sku": "A", "lot_date": "2025-01-01", "source": "receipt", "qty": 3,
+         "recorded_at": "2026-10-01T03:00:00+00:00"},
+    ]})
+    repo = SupabaseRepo(db)
+    repo.replace_receipts([Receipt("A", date(2026, 6, 17), 4)])
+    assert repo.receipts() == [Receipt("A", date(2026, 6, 17), 4)]
+    assert [m.lot_date for m in repo.manual_lots()] == [date(2026, 1, 1)]
+
+
+def test_replacing_receipts_inserts_in_batches():
+    db = FakeSupabase()
+    SupabaseRepo(db).replace_receipts([Receipt(f"P{i:04d}", date(2026, 6, 17), 1) for i in range(1200)])
+    assert len(db.tables["lot_dates"]) == 1200
+    assert db.requests == 1 + 3  # one delete, then batches of 500
