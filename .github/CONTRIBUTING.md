@@ -6,7 +6,7 @@ How we work in the Avatar Clinic repository. Short on purpose: if a rule is miss
 | Branch | Holds | Merges into |
 |---|---|---|
 | `main` | The hub: guidelines, internal tools (`tools/`), analytics (`analytics/`), docs | — (protected by review) |
-| `<Service>-fork` (e.g. `Stock-count-fork`) | One deployable service with its own CI and deploy target, forked from `main` | its own deploy; `main` only through a reviewed PR |
+| `<Service>-fork` (e.g. `Stock-count-fork`) | One deployable service with its own CI and deploy target, forked from `main` | its own deploy target; not merged into `main` as is (see below) |
 | `feat/…` `fix/…` `docs/…` `chore/…` | One focused change | the branch it started from |
 
 - A new service gets its own branch forked from `main`, plus one row in the **Services** table of the front README.
