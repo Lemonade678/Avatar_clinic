@@ -1,0 +1,77 @@
+/* app shell — the minimap styles come from templates/_map.css */
+.topbar { display: flex; gap: 4px; padding: 8px 12px; background: var(--card); border-bottom: 1px solid var(--line);
+          position: sticky; top: 0; z-index: 5; }
+.topbar a { flex: 1; text-align: center; text-decoration: none; padding: 8px 4px; border-radius: 10px; font-size: 14px; color: var(--muted); }
+.topbar a.on { background: var(--bg); color: var(--ink); font-weight: 700; }
+header.page { padding: 14px 16px 6px; }
+header.page h1 { font-size: 21px; margin: 2px 0; }
+.back { text-decoration: none; color: var(--muted); font-size: 14px; }
+.pad-x { padding-left: 16px; padding-right: 16px; }
+h2 { font-size: 16px; margin: 16px 0 8px; }
+h3 { font-size: 14px; margin: 12px 0 6px; }
+.banner { border-radius: 10px; padding: 10px 12px; margin: 8px 0; font-size: 14px; border: 1px solid var(--line); background: var(--card); }
+.banner.ok { border-left: 4px solid var(--done); }
+.banner.warn { border-left: 4px solid var(--diff); }
+.banner.info { border-left: 4px solid var(--check); }
+.banner div { margin-top: 3px; }
+.big { display: block; width: 100%; text-align: center; text-decoration: none; font: inherit; font-size: 17px; font-weight: 700;
+       padding: 14px 16px; border-radius: 12px; border: 0; background: var(--accent); color: #fff; cursor: pointer; margin: 6px 0; }
+.big.ghost, button.ghost, label.ghost { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+button.ghost, label.ghost { font: inherit; font-size: 14px; padding: 9px 12px; border-radius: 10px; cursor: pointer; display: inline-block; }
+button.small { padding: 9px 10px; }
+.big:disabled { opacity: .6; }
+.clock { padding: 4px 16px 8px; }
+.clock .actions { display: grid; gap: 4px; }
+.timer { font-size: 18px; padding: 6px 0; }
+.timer b { font-variant-numeric: tabular-nums; font-size: 24px; }
+.timer b.late { color: var(--diff); }
+.count-list { list-style: none; margin: 8px 0; padding: 0 16px; display: grid; gap: 8px; }
+.count-list li { display: grid; grid-template-columns: 1fr 92px; align-items: center; gap: 10px; background: var(--card);
+                 border: 1px solid var(--line); border-left: 4px solid var(--check); border-radius: 10px; padding: 10px 12px; }
+.count-list li.problem { border-left-color: var(--problem); }
+.count-list li.has-error { border-color: var(--problem); }
+.count-list label { display: grid; gap: 2px; min-width: 0; }
+.count-list .name { font-weight: 600; overflow-wrap: anywhere; }
+.count-list .meta { font-size: 12.5px; color: var(--muted); }
+.count-list input { font: inherit; font-size: 22px; font-weight: 700; text-align: center; width: 100%; padding: 8px 4px;
+                    border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+                    font-variant-numeric: tabular-nums; }
+.count-list input.filled { outline: 2px solid var(--done); }
+.count-list .error { grid-column: 1 / -1; color: var(--problem); font-size: 13px; }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 4px 0; }
+label.file input { display: none; }
+.scanner { margin: 8px 16px; border-radius: 14px; overflow: hidden; background: #000; aspect-ratio: 3 / 4; max-height: 60vh; }
+.scanner video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.scanner video.mirror { transform: scaleX(-1); }
+.manual { display: flex; gap: 8px; margin: 8px 0 24px; }
+.manual input { flex: 1; font: inherit; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--card); border-radius: 10px; overflow: hidden; }
+.table th, .table td { padding: 8px; border-bottom: 1px solid var(--line); text-align: left; }
+.table td:nth-child(n+3), .table th:nth-child(n+3) { text-align: right; font-variant-numeric: tabular-nums; }
+.table td.neg { color: var(--diff); font-weight: 700; }
+.table td.pos { color: var(--check); font-weight: 700; }
+.weeknav { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-size: 14px; }
+.weeknav a { color: var(--muted); text-decoration: none; }
+.podium { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.podium li { position: relative; display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 8px;
+             background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 14px; overflow: hidden; }
+.podium .rank { font-size: 20px; font-weight: 800; color: var(--accent); text-align: center; }
+.podium b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.podium .bar { position: absolute; left: 0; bottom: 0; height: 5px; background: var(--accent); border-radius: 0 4px 4px 0; }
+.stats.flush { padding: 0; }
+ul.plain { margin: 0; padding-left: 18px; }
+.lot-list { list-style: none; margin: 8px 0 24px; padding: 0 16px; display: grid; gap: 8px; }
+.lot-list li { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--done); border-radius: 10px;
+               padding: 10px 12px; display: grid; gap: 4px; }
+.lot-list li.expired { border-left-color: var(--problem); }
+.lot-list li.soon { border-left-color: var(--diff); }
+.lot-list li.unknown { border-left-color: var(--line); }
+.lot-list li.has-error { border-color: var(--problem); }
+.lot-list .name { font-weight: 600; overflow-wrap: anywhere; }
+.lot-list .meta { font-size: 12.5px; color: var(--muted); }
+.lot-list .error { color: var(--problem); font-size: 13px; }
+.lot-form { display: flex; gap: 8px; }
+.lot-form input { flex: 1; min-width: 0; font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line);
+                  background: var(--bg); color: var(--ink); }
+.lot-tag { color: inherit; font-weight: 600; text-decoration: none; }
+.lot-tag.expired { color: var(--problem); }

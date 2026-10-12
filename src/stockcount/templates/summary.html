@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}สรุปวันนี้{% endblock %}
+{% block body %}
+<header class="page">
+  <h1>📦 สรุปการนับ</h1>
+  <div class="sub">{{ s.count_date.strftime("%d/%m/%Y") }}{% if not s.ended_at %} · ยังไม่ได้ส่งยอดจบกะ{% endif %}</div>
+</header>
+<div class="stats">
+  <div class="stat">เวลา <b>{{ minutes_text(s.minutes) if s.minutes is not none else "—" }}</b>{% if s.minutes is not none %} {{ "✅" if s.minutes < 10 else "(เป้า < 10)" }}{% endif %}</div>
+  <div class="stat">นับแล้ว <b>{{ s.slots_done }}</b>/{{ s.slots_total }} ช่อง</div>
+  <div class="stat">ไม่ตรงระบบ <b>{{ s.mismatches|length }}</b></div>
+  <div class="stat">CV ขอนับซ้ำ <b>{{ s.cv_flagged_slots|length }}</b></div>
+</div>
+{% if s.missing_slots %}
+  <div class="pad-x"><div class="banner warn">ยังไม่นับ: {% for c in s.missing_slots %}<a href="/loc/{{ c }}">{{ c }}</a>{{ ", " if not loop.last }}{% endfor %}</div></div>
+{% endif %}
+{% if s.cv_flagged_slots %}
+  <div class="pad-x"><div class="banner warn">⚠️ CV ขอให้นับซ้ำ: {{ s.cv_flagged_slots|join(", ") }}</div></div>
+{% endif %}
+<section class="pad-x">
+  <h2>ไม่ตรงกับระบบ</h2>
+  {% if s.mismatches %}
+  <table class="table">
+    <thead><tr><th>สินค้า</th><th>ช่อง</th><th>ระบบ</th><th>นับ</th><th>ต่าง</th></tr></thead>
+    <tbody>
+    {% for m in s.mismatches %}
+      <tr><td>{{ m.name }}</td><td>{{ m.code }}</td><td>{{ m.expected }}</td><td>{{ m.counted }}</td>
+          <td class="{{ 'neg' if m.counted < m.expected else 'pos' }}">{{ "%+d"|format(m.counted - m.expected) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>ตรงกับระบบทุกรายการ ✅</p>
+  {% endif %}
+</section>
+{% if s.expiring %}
+<section class="pad-x">
+  <h2>⏳ อายุสินค้า {{ shelf_life }}</h2>
+  <ul class="plain">
+  {% for v in s.expiring %}
+    <li>{{ "🔴 ครบแล้ว" if v.status == "expired" else "🟡 ใกล้ครบ" }} — {{ v.name }} (ล็อต {{ lot_date_text(v.lot_date) }} · ครบ {{ lot_date_text(v.expires) }})</li>
+  {% endfor %}
+  </ul>
+  <p><a href="/lots">📅 ไปหน้าล็อต</a></p>
+</section>
+{% endif %}
+<p class="pad-x"><a href="/report">📊 รายงานรายอาทิตย์</a> · <a href="/map">🗺️ กลับแผนผัง</a></p>
+{% endblock %}

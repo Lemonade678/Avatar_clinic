@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}ช่อง {{ view.code }}{% endblock %}
+{% block body %}
+<header class="page">
+  <a href="/map" class="back">← แผนผัง</a>
+  <h1>ช่อง {{ view.code }}</h1>
+  <div class="sub">{{ "ฝั่งซ้าย" if view.location.side == "L" else "ฝั่งขวา" }} · ชั้นที่ {{ view.location.storey }} · ชั้นวาง {{ "%02d"|format(view.location.shelf) }}</div>
+</header>
+
+{% if flash %}<div class="pad-x">{% include "_flash.html" %}</div>{% endif %}
+{% if view.read_only %}<div class="pad-x"><div class="banner info">ส่งยอดวันนี้แล้ว — ดูได้อย่างเดียว</div></div>{% endif %}
+
+{% if not view.items %}
+  <div class="pad-x"><div class="banner info">ช่องนี้ไม่มีสินค้าที่ต้องเช็ค{% if view.hidden_empty %} ({{ view.hidden_empty }} รายการระบบเป็น 0){% endif %}</div></div>
+{% else %}
+<form method="post" enctype="multipart/form-data" id="count-form">
+  <input type="hidden" name="input_method" id="input_method" value="type">
+  <ul class="count-list">
+  {% for i in view.items %}
+    {% if i.sku in values %}{% set value = values[i.sku] %}
+    {% elif i.counted is not none %}{% set value = i.counted %}
+    {% elif i.expected >= 0 %}{% set value = i.expected %}
+    {% else %}{% set value = "" %}{% endif %}
+    <li class="{{ i.status }}{{ ' has-error' if errors.get(i.sku) }}">
+      <label for="qty_{{ i.sku }}">
+        <span class="name">{{ i.name }}</span>
+        <span class="meta">ระบบ <b>{{ i.expected }}</b>{% if i.last %} · ครั้งก่อน {{ i.last[1] }} ({{ i.last[0].strftime("%d/%m") }}){% endif %}{% if i.status == "problem" %} · ⚠️ ยอดระบบติดลบ นับของจริง{% endif %}{% if i.lot and i.lot.status in ("expired", "soon") %} · <a class="lot-tag {{ i.lot.status }}" href="/lots#{{ i.sku }}">{{ "🔴 ครบ " ~ shelf_life ~ "แล้ว" if i.lot.status == "expired" else "🟡 ใกล้ครบ " ~ shelf_life }} (ล็อต {{ lot_date_text(i.lot.lot_date) }})</a>{% endif %}</span>
+      </label>
+      <input id="qty_{{ i.sku }}" name="qty_{{ i.sku }}" value="{{ value }}" inputmode="numeric" autocomplete="off"
+             data-sku="{{ i.sku }}"{{ " disabled" if view.read_only }}>
+      {% if errors.get(i.sku) %}<div class="error">{{ errors[i.sku] }}</div>{% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+  {% if view.hidden_empty %}<p class="sub pad-x">ซ่อน {{ view.hidden_empty }} รายการที่ระบบเป็น 0 (ไม่ต้องเช็ค)</p>{% endif %}
+  {% if not view.read_only %}
+  <div class="tools pad-x">
+    <button type="button" id="voice" class="ghost" hidden>🎤 พูดยอด</button>
+    <button type="button" id="voice-lang" class="ghost small" hidden>ไทย</button>
+    <label class="ghost file">📷 ถ่ายรูปชั้น<input type="file" name="photo" accept="image/*" capture="environment" id="photo"></label>
+  </div>
+  <div class="sub pad-x" id="photo-name"></div>
+  <div class="sub pad-x" id="voice-hint"></div>
+  <div class="pad-x"><button class="big" type="submit">💾 บันทึก</button></div>
+  <p class="sub pad-x">ตัวเลขใส่ค่าระบบไว้ให้แล้ว — ถ้าของจริงตรง กดบันทึกได้เลย</p>
+  {% endif %}
+</form>
+{% endif %}
+
+{% if view.photos %}
+  <p class="sub pad-x">รูปวันนี้ {{ view.photos|length }} รูป · CV:
+  {% for p in view.photos %}{{ {"ok": "✅", "flagged": "⚠️", "skipped": "—"}[p.cv_status] }} {% endfor %}</p>
+{% endif %}
+<script src="/static/slot.js" defer data-code="{{ view.code }}" data-camera="{{ camera_default }}"></script>
+{% endblock %}

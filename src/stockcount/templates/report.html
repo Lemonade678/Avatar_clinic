@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}รายงาน {{ r.week }}{% endblock %}
+{% block body %}
+<header class="page">
+  <h1>📊 รายงานสัปดาห์</h1>
+  <div class="weeknav">
+    <a href="/report?week={{ prev_week }}">‹ {{ prev_week }}</a>
+    <b>{{ r.week }}</b> <span class="sub">{{ r.start.strftime("%d/%m") }}–{{ r.end.strftime("%d/%m/%Y") }}</span>
+    <a href="/report?week={{ next_week }}">{{ next_week }} ›</a>
+  </div>
+</header>
+
+<section class="pad-x">
+  <h2>🏆 ของไหลออกเร็วที่สุด อันดับ 1–2–3</h2>
+  {% if r.top_movers %}
+    <ol class="podium">
+      {% set top = r.top_movers[0].moved %}
+      {% for m in r.top_movers %}
+        <li>
+          <span class="rank">{{ loop.index }}</span>
+          <span class="who">{{ m.name }} <span class="sub">{{ m.sku }}</span></span>
+          <b>{{ m.moved }}</b>
+          <span class="bar" style="width: {{ (100 * m.moved / top)|round|int }}%"></span>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="sub">ยังไม่มีข้อมูลพอ — ต้องนับอย่างน้อย 2 วันในสัปดาห์นี้ (หรือมีรอบนับก่อนหน้า)</p>
+  {% endif %}
+  <p class="sub">ประมาณจากยอดที่ลดลงระหว่างการนับแต่ละวัน · ยอดที่เพิ่ม = ของเข้า ไม่นับเป็นยอดขาย · ของที่ย้ายไปหน้าร้านก็นับรวมด้วย</p>
+</section>
+
+<section class="pad-x">
+  <h2>สรุปสต็อกประจำสัปดาห์</h2>
+  <div class="stats flush">
+    <div class="stat">รอบนับ <b>{{ r.sessions }}</b></div>
+    <div class="stat">เวลาเฉลี่ย <b>{{ minutes_text(r.avg_minutes) if r.avg_minutes is not none else "—" }}</b></div>
+    <div class="stat">CV ตรงกับคน <b>{{ r.cv_ok }}</b>/{{ r.cv_checked }}{% if r.cv_checked %} ({{ (100 * r.cv_ok / r.cv_checked)|round|int }}%){% endif %}</div>
+    <div class="stat">สินค้าที่นับ <b>{{ r.latest|length }}</b></div>
+  </div>
+  {% if r.mismatches %}
+    <h3>ไม่ตรงกับระบบบ่อย</h3>
+    <ul class="plain">{% for m in r.mismatches %}<li>{{ m.name }} — {{ m.times }} ครั้ง</li>{% endfor %}</ul>
+  {% endif %}
+</section>
+{% endblock %}

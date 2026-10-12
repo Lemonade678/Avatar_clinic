@@ -1,0 +1,19 @@
+{% set warn = flash.cv == "flagged" or flash.mismatches or flash.too_dark or flash.photo_error %}
+<div class="banner {{ 'warn' if warn else 'ok' }}">
+  <b>✅ บันทึกช่อง {{ flash.code }} แล้ว</b>
+  {% if flash.mismatches %}
+    <div>ไม่ตรงกับระบบ {{ flash.mismatches|length }} รายการ:
+      {% for m in flash.mismatches %}{{ m.name }} (ระบบ {{ m.expected }} → นับ {{ m.counted }}){{ ", " if not loop.last }}{% endfor %}</div>
+  {% endif %}
+  {% if flash.cv == "ok" %}
+    <div>📷 CV นับตรงกับที่กรอก ✅</div>
+  {% elif flash.cv == "flagged" %}
+    <div>⚠️ CV นับไม่ตรง:
+      {% for c in flash.classes if not c.ok %}{{ packaging_th.get(c.packaging, c.packaging) }} CV {{ c.cv }} / กรอก {{ c.human }}{{ " · " if not loop.last }}{% endfor %}
+      — ลองนับช่องนี้อีกรอบ</div>
+  {% elif flash.cv == "skipped" %}
+    <div class="sub">📷 เก็บรูปแล้ว (CV ไม่ได้ตรวจ)</div>
+  {% endif %}
+  {% if flash.too_dark %}<div>💡 รูปมืดเกินไป — ครั้งหน้าเปิดไฟฉาย/แฟลช</div>{% endif %}
+  {% if flash.photo_error %}<div>รูปอ่านไม่ได้ ไม่ได้เก็บรูป (ยอดบันทึกแล้ว)</div>{% endif %}
+</div>

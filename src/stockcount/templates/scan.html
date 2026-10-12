@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}สแกน QR{% endblock %}
+{% block body %}
+<header class="page">
+  <h1>📷 สแกน QR ที่ช่อง</h1>
+  <div class="sub">ส่องกล้องไปที่ป้าย · อ่านได้แม้ภาพกลับซ้าย-ขวาหรือสีกลับ</div>
+</header>
+<div class="scanner"><video id="video" playsinline muted></video><canvas id="canvas" hidden></canvas></div>
+<div class="tools pad-x">
+  <button type="button" id="switch" class="ghost">🔄 สลับกล้อง (<span id="cam-name">…</span>)</button>
+</div>
+<p id="status" class="sub pad-x">กำลังเปิดกล้อง…</p>
+<form class="manual pad-x" id="manual">
+  <input name="code" placeholder="หรือพิมพ์รหัสช่อง เช่น L0301" autocomplete="off" autocapitalize="characters">
+  <button class="ghost">ไป</button>
+</form>
+<script src="/static/vendor/jsQR.js"></script>
+<script src="/static/scan.js" data-camera="{{ camera_default }}"></script>
+{% endblock %}

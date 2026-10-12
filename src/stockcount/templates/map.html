@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% import "_map_macros.html" as ui %}
+{% block body %}
+<header class="page">
+  <h1>🗺️ หลังร้าน {{ branch_label }}</h1>
+  <div class="sub">วันนี้ {{ today }} · ยอด "หน้าร้าน" จากใบนับ {{ as_of }}</div>
+</header>
+
+{% if flash %}<div class="pad-x">{% include "_flash.html" %}</div>{% endif %}
+
+<section class="clock">
+  {% if not session %}
+    <form method="post" action="/session/start"><button class="big">⏱️ เริ่มนับ</button></form>
+    <div class="sub">ลืมกดก็ได้ — ระบบเริ่มจับเวลาเองตอนบันทึกช่องแรก</div>
+  {% elif not session.submitted %}
+    <div class="timer" data-started="{{ session.started_at.isoformat() }}">⏱️ <b id="elapsed">0:00</b> <span class="sub">เป้า &lt; 10 นาที</span></div>
+    <div class="actions">
+      {% if next_slot %}<a class="big" href="/loc/{{ next_slot }}">▶️ ช่องถัดไป {{ next_slot }}</a>{% else %}<div class="banner ok">นับครบทุกช่องแล้ว 🎉</div>{% endif %}
+      <form method="post" action="/session/submit" onsubmit="return confirm('ส่งยอดจบกะวันนี้? ส่งแล้วแก้ไม่ได้')">
+        <button class="big ghost">📤 ส่งยอดจบกะ</button>
+      </form>
+    </div>
+  {% else %}
+    <div class="banner ok">✅ ส่งยอดวันนี้แล้ว · <a href="/summary">ดูสรุป</a></div>
+  {% endif %}
+</section>
+
+<div class="stats">
+  <div class="stat">ต้องเช็ค <b>{{ m.to_check }}</b></div>
+  <div class="stat">มีตำแหน่งแล้ว <b>{{ m.placed }}</b>/{{ m.total_products }}</div>
+  <div class="stat">ต้องเช็คแต่ยังไม่มีตำแหน่ง <b>{{ m.unplaced|length }}</b></div>
+</div>
+{{ ui.legend(live=True) }}
+{{ ui.search_box() }}
+{{ ui.room(m, left, right, link=True) }}
+
+<script>
+{% include "_search.js" %}
+  (function () {
+    const el = document.querySelector("[data-started]");
+    if (!el) return;
+    const started = new Date(el.dataset.started).getTime();
+    const out = document.getElementById("elapsed");
+    const tick = () => {
+      const s = Math.max(0, Math.floor((Date.now() - started) / 1000));
+      out.textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+      out.classList.toggle("late", s >= 600);
+    };
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
+{% endblock %}

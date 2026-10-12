@@ -1,0 +1,16 @@
+# Dependencies are listed explicitly because Railpack runs pip install before copying src/.
+# Keep in sync with [project].dependencies in pyproject.toml.
+fastapi>=0.110
+uvicorn[standard]>=0.29
+line-bot-sdk>=3.11
+supabase>=2.4
+pyyaml>=6.0
+qrcode[pil]>=7.4
+pillow>=10.1
+python-dotenv>=1.0
+tzdata>=2024.1
+jinja2>=3.1
+python-multipart>=0.0.9
+itsdangerous>=2.1
+httpx>=0.27
+
