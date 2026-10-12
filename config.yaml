@@ -7,7 +7,7 @@ line_basic_id: "@425vmodd"      # Basic ID ของ LINE OA (ขึ้นต้
 liff_id: "2011971347-YGDQBa4S"             # LIFF app ID — ใช้สร้างลิงก์ใน QR
 
 # ว่าง = ใครก็เข้าได้ (ช่วงทดลองบนคอม) · pilot: ใส่ LINE user ID ของณัฑฒ์
-allowed_line_user_ids: [m10udsJUUJx90pMJJioOyyUhSdeAJSnIz3qwKM2vHCGRQWZwsNQsV4nVIHtaA8J1+o5miuEKzPy/7zRu7cYnG4b6QzojIXz30kxIXDf0pNIGHQiwmn4Ex27gZZwjwQIR+SnUyF1CtKEvEhWwebM5WQdB04t89/1O/w1cDnyilFU=]
+allowed_line_user_ids: m10udsJUUJx90pMJJioOyyUhSdeAJSnIz3qwKM2vHCGRQWZwsNQsV4nVIHtaA8J1+o5miuEKzPy/7zRu7cYnG4b6QzojIXz30kxIXDf0pNIGHQiwmn4Ex27gZZwjwQIR+SnUyF1CtKEvEhWwebM5WQdB04t89/1O/w1cDnyilFU=
 
 # กล้องเริ่มต้นของตัวสแกน QR: back | front (แต่ละเครื่องสลับเองได้ในหน้าสแกน แล้วระบบจำไว้)
 camera_default: back
