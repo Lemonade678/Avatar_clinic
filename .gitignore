@@ -1,0 +1,33 @@
+# ---- secrets: never commit ----
+.env
+.env.*
+!.env.example
+
+# ---- PRIVACY (PDPA): personal data never enters git ----
+# photos of people, audio, consent forms, interview lists, raw survey answers
+private/
+**/photos/
+*.mp3
+*.m4a
+*.wav
+*.aac
+analytics/*/data/*
+!analytics/*/data/.gitkeep
+analytics/*/datasets/
+
+# ---- build and run artefacts ----
+analytics/*/outputs/
+__pycache__/
+.pytest_cache/
+.venv/
+node_modules/
+# model weights are large and may encode training photos
+*.pt
+*.task
+
+# ---- editors and OS ----
+.vscode/
+.idea/
+.obsidian/workspace*.json
+.DS_Store
+Thumbs.db
